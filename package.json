@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "core-js": "^3.8.3",
+    "hs-ssi-sdk": "github:hypersign-protocol/hid-ssi-js-sdk#develop",
+    "node-polyfill-webpack-plugin": "^2.0.1",
     "vue": "^2.6.14"
   },
   "devDependencies": {
