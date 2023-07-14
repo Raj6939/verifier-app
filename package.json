@@ -8,10 +8,31 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@cosmjs/crypto": "^0.31.0",
+    "@cosmjs/proto-signing": "^0.31.0",
+    "@digitalbazaar/ed25519-verification-key-2020": "^4.1.0",
+    "@digitalbazaar/x25519-key-agreement-key-2020": "^3.0.1",
+    "@hypersign-protocol/hypersign-vault-client": "github:hypersign-protocol/hypersign-edv-client#dev-2.0",
+    "@mdi/font": "^7.2.96",
+    "@mdi/light-font": "^0.2.63",
+    "bip39": "^3.1.0",
+    "bootstrap-vue": "^2.23.1",
+    "browserify": "^17.0.0",
+    "buffer": "^6.0.3",
     "core-js": "^3.8.3",
     "hs-ssi-sdk": "github:hypersign-protocol/hid-ssi-js-sdk#develop",
+    "lodash": "^4.17.21",
+    "multibase": "^4.0.6",
     "node-polyfill-webpack-plugin": "^2.0.1",
-    "vue": "^2.6.14"
+    "vue": "^2.6.14",
+    "vue-json-editor": "^1.4.3",
+    "vue-json-viewer": "^2.2.22",
+    "vue-loading-overlay": "^3.4.0",
+    "vue-router": "^3.0.1",
+    "vue-stepper-component": "^1.0.0",
+    "vue-sweetalert2": "^5.0.5",
+    "vuex": "^3.0.0",
+    "web3": "^1.6.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
