@@ -1,5 +1,6 @@
 <template>
   <div class="hello"> 
+    <h1>Game 2</h1>
     <div class="container">
        <b-button class="mt-4 mb-2" variant="primary" @click="connectMetamask" style="float:right;">{{
               address ? address : "Connect Metamask"
@@ -46,15 +47,15 @@
       <b-tab
       title="Game">
       <b-card class="mt-4">
-          <h4 class="text-left"><strong> Play your Game </strong></h4>          
-          <p>Level</p><v-stepper :steps="steps" v-model="step"></v-stepper>
-          <div class="mt-4">
-          <b-button variant="primary" @click="start">Start Playing</b-button>
-          <b-button class="ml-2" variant="primary" @click="reset">Reset</b-button>
+          <h4 class="text-left"><strong> Play your Game </strong></h4> 
+          <h5 class="text-right">Score: {{score}}</h5>          
+          <b-button class="text-left" variant="primary" @click="start">Start Playing</b-button>
+          <b-button class="ml-2 text-left" variant="primary" @click="reset">Reset</b-button>
+          <p class="mt-4">Level</p><v-stepper :steps="steps" v-model="step"></v-stepper>
+          <div class="mt-4">          
           </div>
-          <div class="row mt-4 ml-4" v-if="isStarted"> 
-            <p>Score: {{score}}</p>           
-              <div class="box" @mousemove="increaseScore">
+          <div class="row mt-4 ml-4">                       
+              <div class="box w-100" @mousemove="increaseScore">
                 Move your cursor inside this box to increase the score!
               </div>              
             </div>
@@ -143,6 +144,7 @@ export default {
       this.step = 1
     },
     increaseScore(){
+      if(this.isStarted){              
       if(this.score<=100){
         this.level = 1
         this.step = 2             
@@ -152,7 +154,7 @@ export default {
       }if(this.score>=200){
         this.step = 4      
       }
-      this.score +=1;   
+      this.score +=1; }  
     },
      async connectMetamask() {
       const web3 = await loadweb3(1);
