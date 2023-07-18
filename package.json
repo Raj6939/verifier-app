@@ -12,6 +12,9 @@
     "@cosmjs/proto-signing": "^0.31.0",
     "@digitalbazaar/ed25519-verification-key-2020": "^4.1.0",
     "@digitalbazaar/x25519-key-agreement-key-2020": "^3.0.1",
+    "@fortawesome/free-brands-svg-icons": "^6.4.0",
+    "@fortawesome/free-regular-svg-icons": "^6.4.0",
+    "@fortawesome/free-solid-svg-icons": "^6.4.0",
     "@hypersign-protocol/hypersign-vault-client": "github:hypersign-protocol/hypersign-edv-client#dev-2.0",
     "@mdi/font": "^7.2.96",
     "@mdi/light-font": "^0.2.63",
@@ -29,7 +32,7 @@
     "vue-json-viewer": "^2.2.22",
     "vue-loading-overlay": "^3.4.0",
     "vue-router": "^3.0.1",
-    "vue-stepper-component": "^1.0.0",
+    "vue-step-progress": "^0.3.8",
     "vue-sweetalert2": "^5.0.5",
     "vuex": "^3.0.0",
     "web3": "^1.6.0"
@@ -42,6 +45,8 @@
     "@vue/cli-service": "~5.0.0",
     "eslint": "^7.32.0",
     "eslint-plugin-vue": "^8.0.3",
+    "node-sass": "^9.0.0",
+    "sass-loader": "^13.3.2",
     "vue-template-compiler": "^2.6.14"
   },
   "eslintConfig": {
