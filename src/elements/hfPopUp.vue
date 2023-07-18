@@ -1,5 +1,5 @@
 <template>
-  <b-modal :size="Size" hide-footer :id="Id" :hide-header="keepHeader" :title="Header" centered>
+  <b-modal :size="Size" hide-footer :id="Id" :hide-header="keepHeader" :title="Header" :no-close-on-backdrop="true" centered>
     <div v-if="keepHeader" class="d-flex justify-content-end">
     <button type="button" class="close" @click="close(Id)" aria-label="Close">
       <span aria-hidden="true">&times;</span>
