@@ -26,6 +26,7 @@
     "hs-ssi-sdk": "github:hypersign-protocol/hid-ssi-js-sdk#develop",
     "lodash": "^4.17.21",
     "multibase": "^4.0.6",
+    "node-fetch": "^3.3.1",
     "node-polyfill-webpack-plugin": "^2.0.1",
     "vue": "^2.6.14",
     "vue-json-editor": "^1.4.3",

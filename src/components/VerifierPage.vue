@@ -53,15 +53,15 @@
               <li style="display: flex; align-items: center;">
                 <strong style="margin-right: 10px;">DID:</strong>
                 <div class="d-flex align-items-center">
-                  <span style="margin-right: 10px;">{{truncate1(did, 30)}}</span>
-                  <i class="fas fa-copy copy-icon" @click="copyToClipboard(did,'DID')"></i>
+                  <span style="margin-right: 10px;">{{truncate1(didDoc.id, 30)}}</span>
+                  <i class="fas fa-copy copy-icon" @click="copyToClipboard(didDoc.id,'DID')"></i>
                 </div>
               </li>
               <li style="display: flex; align-items: center;">
                 <strong style="margin-right: 10px;">EDV ID:</strong>
                 <div class="d-flex align-items-center">
-                  <span style="margin-right: 10px;">{{truncate1(`hs:edv:${did}`, 30)}}</span>
-                  <i class="fas fa-copy copy-icon" @click="copyToClipboard(`hs:edv:${did}`,'EDV Id')"></i>
+                  <span style="margin-right: 10px;">{{truncate1(`hs:edv:${didDoc.id}`, 30)}}</span>
+                  <i class="fas fa-copy copy-icon" @click="copyToClipboard(`hs:edv:${didDoc.id}`,'EDV Id')"></i>
                 </div>
               </li>
               <li style="display: flex; align-items: center;">
@@ -115,32 +115,34 @@
 </template>
 
 <script>
-import { HypersignDID, HypersignVerifiablePresentation } from "hs-ssi-sdk";
-import { HypersignEdvClientEcdsaSecp256k1 } from "@hypersign-protocol/hypersign-vault-client";
+import { HypersignDID } from "hs-ssi-sdk";
 import loadweb3 from "../utils/web3Instance";
 import toast from "../utils/toast";
 import multibase from "multibase";
 import { Buffer } from "buffer";
 import HfPopUp from "../elements/hfPopUp.vue";
-import {
-  HIDNODE_NAMESPACE,
-  HIDNODE_REST,
-  HIDNODE_RPC,
+import { 
   truncate
 } from "../utils/hsConstants";
 import StepProgress from 'vue-step-progress';
 window.Buffer = Buffer;
-import { mapState } from "vuex"
+import { mapActions, mapMutations, mapState } from "vuex"
 export default {
   name: "VerifierPage",
   components: {StepProgress,HfPopUp },
   computed:{
-    ...mapState({did:state => state.holderStore.address}),
-    // ...mapGetters('holder',['getAddress'])
-    },
+    ...mapState({
+      didDoc:state=>state.holderStore.didDoc,
+      isLoggedId:state=>state.holderStore.isLoggedIn,
+      edvConfig:state=>state.holderStore.edvConfig,
+      edvClient:state=>state.holderStore.edvClient,
+      hypersignVP:state=>state.holderStore.hypersignVp,
+      showDecryptedCred:state=>state.holderStore.decryptedVc,
+      did:state => state.holderStore.address
+      })
+  },
   data() {
     return {
-      edvConfig:null,
       showImportBtn:true,
       isImported:false,
       accpetCred:false,
@@ -149,34 +151,31 @@ export default {
       linethickness:10,
       passivethickness:10,
       activethickness:10,
-      isLoggedId:false,
       vpResult: null,
       isStarted: false,    
       level: 0,
       score: 0,
       userPublicKeyMultibase: "",
       address: "",
-      didDoc: null,
       publicKeyMultibase: "",
-      edvClient: null,
       hypersignDID: null,
       fetchEncryptedCred: [],
-      showDecryptedCred: null,
-      keyAgreementKeyPair: {},
-      hypersignVP: null,
+      keyAgreementKeyPair: {},      
     };
   },
-  async mounted() {
+  async created(){
+    await this.authenticateEntity()
+  },
+  mounted() {
     const namespace = "testnet";
     this.hypersignDID = new HypersignDID({ namespace });
     console.log(this.hypersignDID);
-    this.hypersignVP = new HypersignVerifiablePresentation({
-      nodeRestEndpoint: HIDNODE_REST,
-      nodeRpcEndpoint: HIDNODE_RPC,
-      namespace: HIDNODE_NAMESPACE,
-    });
+    this.initVpClass()
   },
-  methods: {
+  methods: {    
+    ...mapActions('holderStore',['generateDIDDoc','initEdv','queryCredFromEdv','decryptVc','insertCredToEdv','preparePresentation','initVpClass']),
+    ...mapActions('issuerStore',['authenticateEntity','issueCredential']),
+    ...mapMutations('holderStore',['setLogginStatus']),
     copyToClipboard(id,content){
       if (id) {
         navigator.clipboard
@@ -194,11 +193,24 @@ export default {
       this.accpetCred = false
       this.showImportBtn= false
     },
-    acceptCredBtn(){
+    async acceptCredBtn(){
+      console.log(this.score)
+      console.log(this.level)
       this.accpetCred = true      
+      const vcFieldToSend = {        
+        name:'raj',
+        rollNo:20
+      }
+      console.log(vcFieldToSend)
+      const issueCredResult = await this.issueCredential(vcFieldToSend)
+      console.log(issueCredResult)
+      if(issueCredResult!==null) {
+        const storeToEdv = await this.insertCredToEdv(this.keyAgreementKeyPair)
+        console.log(storeToEdv)
+      }
     },
     disconnect(){
-      this.isLoggedId = false
+      this.$store.commit('holderStore/setLogginStatus',false)
       this.score = 0
       this.level = 0
       this.reset()
@@ -250,17 +262,21 @@ export default {
         this.score += 1;        
       }
     },
-    async connectMetamask() {
+    async connectMetamask() {      
       const web3 = await loadweb3(1);
       window.web3 = web3;
       const accounts = await web3.eth.getAccounts();
+      const acc = accounts[0]
       const publicKey = await window.ethereum.request({
         method: "eth_getEncryptionPublicKey",
-        params: [accounts[0]],
+        params: [acc],
       });
+      console.log(publicKey)
       this.userPublicKeyMultibase = publicKey;
       this.address = accounts[0];
-      await this.generateDiD();
+      const res = await this.generateDIDDoc(this.address)  
+      await this.generateDiD()
+      console.log(res)      
     },
     async fetchAllVcFn() {
       try {
@@ -276,13 +292,6 @@ export default {
       }
     },
     async generateDiD() {
-      const genDiD = await this.hypersignDID.createByClientSpec({
-        methodSpecificId: this.address,
-        chainId: "0x1",
-        clientSpec: "eth-personalSign",
-        address: this.address,
-      });
-      this.didDoc = genDiD;
       const verificationMethod = {
         id: this.didDoc.id + "#" + `eip155:1:${this.address}`,
         type: "EcdsaSecp256k1RecoveryMethod2020",
@@ -298,22 +307,12 @@ export default {
         controller: this.didDoc.id,
         publicKeyMultibase: this.publicKeyMultibase,
       };
-      this.edvClient = new HypersignEdvClientEcdsaSecp256k1({
-        url: "https://stage.hypermine.in/vault",
+      const payload = {
+        url:'https://stage.hypermine.in/vault',
         keyAgreement: this.keyAgreementKeyPair,
         verificationMethod,
-      });
-      const config = {
-        edvId: `hs:edv:${this.didDoc.id}`,
-        verificationMethod: verificationMethod,
-        keyAgreement: this.keyAgreementKeyPair,
-      };
-     const res = await this.edvClient.registerEdv(config);
-     this.edvConfig = res
-     if(res!==null){
-      this.isLoggedId = true
-     }
-      
+      }
+      await this.initEdv(payload)
     },
     async importScore() {
       if(this.isImported){
@@ -322,28 +321,20 @@ export default {
       if (this.didDoc === null) {
         return this.toast("Connect Metamask", "error");
       }
-      const query = await this.edvClient.Query({
-        edvId: `hs:edv:${this.didDoc.id}`,
-        equals: [
-          {
-            "content.credentialSchema.id":
-              "sch:hid:testnet:zufjU7LuQuJNFiUpuhCwYkTrakUu1VmtxE9SPi5TwfUB:1.0",
-          },
-        ],
-        // has:['content.data']
-      });
-      console.log(query);
-      const res = await this.decryptVc(query[0]);
-      console.log(res);
-      const verifyResult = await this.presentCred();
+      await this.queryCredFromEdv()
+      const res = await this.decryptVc(this.keyAgreementKeyPair.id);
+      const prepareVp = await this.preparePresentation()
+      console.log(prepareVp)
+      console.log(this.didDoc.verificationMethod[0].id)
+      console.log(res.content.issuer + "#key-1")
       const result = await this.hypersignVP.verifyByClientSpec({
-        signedPresentation: verifyResult,
+        signedPresentation: prepareVp,
         challenge: "1223121",
         domain: "www.hypersign.id",
-        issuerDid: this.showDecryptedCred.issuer,
+        issuerDid: res.content.issuer,
         holderDid: this.didDoc.id,
         holderVerificationMethodId: this.didDoc.verificationMethod[0].id,
-        issuerVerificationMethodId: this.showDecryptedCred.issuer + "#key-1",
+        issuerVerificationMethodId: res.content.issuer + "#key-1",
         web3Obj: window.web3,
       });
       console.log(result);
@@ -356,41 +347,6 @@ export default {
         this.isImported = true
         this.level=1  
         this.accpetCred = true     
-      }
-    },
-    async presentCred() {
-      const presentation = await this.hypersignVP.generate({
-        verifiableCredentials: [this.showDecryptedCred],
-        holderDid: this.didDoc.id,
-      });
-      console.log(presentation);
-      const vp = await this.hypersignVP.signByClientSpec({
-        presentation,
-        holderDid: this.didDoc.id,
-        verificationMethodId: this.didDoc.verificationMethod[0].id,
-        web3Obj: window.web3,
-        challenge: "1223121",
-        domain: "www.hypersign.id",
-      });
-      console.log(vp);
-      return vp;
-    },
-    async decryptVc(encCred) {
-      console.log(encCred);
-      this.showDecryptedCred = null;
-      try {
-        const decryptDoc = await this.edvClient.decryptDocument({
-          encryptedDocument: encCred.encryptedData,
-          recipient: {
-            id: this.keyAgreementKeyPair.id,
-            type: "X25519KeyAgreementKeyEIP5630",
-          },
-        });
-        console.log(decryptDoc);
-        this.showDecryptedCred = decryptDoc.content;
-        return this.showDecryptedCred;
-      } catch (error) {
-        this.toast(error, "error");
       }
     },
     base64toMultibase58(base64) {
