@@ -58,6 +58,58 @@ const issuerStore ={
                     reject(error)
                 }                
             })
+        },
+        resolveDID: ({getters},payload) => {
+            return new Promise((resolve,reject) => {
+                try {                    
+                    const url = config.baseUrl + '/api/v1/did/resolve/' + payload
+                    fetch(url,{
+                        method: 'GET',
+                        headers:getters.getEntityHeader,
+                    }).then(resp =>{
+                        return resp.json()
+                    }).then(json =>{                                                             
+                        resolve(json)
+                    })
+                } catch (error) {
+                    reject(error)
+                }
+            })
+        },
+        registerDID : ({rootGetters,getters},payload) => {
+            return new Promise((resolve,reject) => {
+                try {         
+                    const verifcationMethodId = rootGetters['holderStore/getVerificationMethodId']
+
+                    const url = config.baseUrl + '/api/v1/did/register'
+                    const body = {
+                        didDocument:rootGetters['holderStore/getDIDoc'],
+                        signInfos:[
+                            {   
+                                verification_method_id: verifcationMethodId,
+                                clientSpec:{ type: "eth-personalSign" },
+                                signature: payload.signature
+                            }
+                        ],                        
+                    }
+                    fetch(url, {
+                        method:'POST',
+                        headers:getters.getEntityHeader,
+                        body:JSON.stringify(body)
+                    }).then(resp => {
+                        return resp.json()
+                    }).then(json => {
+                        if(json.statusCode == 400){
+                            throw new Error('Bad Request'+json.message.toString())
+                        }
+                        console.log(json)
+                        resolve(json)
+                    })
+                } catch (error) {
+                    console.log(error)
+                    reject(error)
+                }
+            })
         },      
         issueCredential: ({getters,rootGetters,commit},payload)=>{
             console.log(payload)

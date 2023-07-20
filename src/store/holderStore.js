@@ -6,6 +6,23 @@ import {
     HIDNODE_REST,
     HIDNODE_RPC,    
   } from "../utils/hsConstants";
+
+// NOTE: Since Metamask signs the symmetric primitive data types like string,interger and array of symmetric premitive type,
+// we need to convert didDoc(jsonld) to json stringified
+
+  function ldToJsonConvertor(ld) {
+    const json = {};
+    for (const key in ld) {
+        if (key === "@context") {
+            json['context'] = ld[key];
+            // } else if (ld[key] === "" || (Array.isArray(ld[key]) && ld[key].length === 0)) {
+            //     json[key] = undefined;
+        } else {
+            json[key] = ld[key]
+        }
+    }
+    return json;
+}
 const holderStore ={
     namespaced: true,
     state: {
@@ -29,7 +46,20 @@ const holderStore ={
             if(state.didDoc!==null) {
                 return state.didDoc.verificationMethod[0].id
             }
-        }
+        },
+        getDIDoc(state){
+            if(state.didDoc!==null){
+                return state.didDoc
+            }
+        },
+        getDIDDocJSONString: (state) => {
+            return JSON.stringify(ldToJsonConvertor(state.didDoc), (key, value) => {
+                if (value === "" || (Array.isArray(value) && value.length === 0)) {
+                    return undefined;
+                }
+                return value;
+            })
+        },
         
     },
     mutations: {        
