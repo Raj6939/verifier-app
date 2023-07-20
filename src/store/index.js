@@ -1,8 +1,8 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-import issuerStore from './issuer';
-import verifierStore from './verifier';
-import holderStore from './holder'
+import issuerStore from './issuerStore';
+import verifierStore from './verifierStore';
+import holderStore from './holderStore'
 Vue.use(Vuex)
 
 export default new Vuex.Store({
