@@ -126,7 +126,7 @@ import {
 } from "../utils/hsConstants";
 import StepProgress from 'vue-step-progress';
 window.Buffer = Buffer;
-import { mapActions, mapMutations, mapState } from "vuex"
+import { mapActions, mapGetters, mapMutations, mapState } from "vuex"
 export default {
   name: "VerifierPage",
   components: {StepProgress,HfPopUp },
@@ -139,7 +139,8 @@ export default {
       hypersignVP:state=>state.holderStore.hypersignVp,
       showDecryptedCred:state=>state.holderStore.decryptedVc,
       did:state => state.holderStore.address
-      })
+      }),
+    ...mapGetters('holderStore',['getDIDDocJSONString'])
   },
   data() {
     return {
@@ -174,7 +175,7 @@ export default {
   },
   methods: {    
     ...mapActions('holderStore',['generateDIDDoc','initEdv','queryCredFromEdv','decryptVc','insertCredToEdv','preparePresentation','initVpClass']),
-    ...mapActions('issuerStore',['authenticateEntity','issueCredential']),
+    ...mapActions('issuerStore',['authenticateEntity','issueCredential','registerDID','resolveDID']),
     ...mapMutations('holderStore',['setLogginStatus']),
     copyToClipboard(id,content){
       if (id) {
@@ -262,7 +263,8 @@ export default {
         this.score += 1;        
       }
     },
-    async connectMetamask() {      
+    async connectMetamask() {     
+      try {
       const web3 = await loadweb3(1);
       window.web3 = web3;
       const accounts = await web3.eth.getAccounts();
@@ -274,9 +276,23 @@ export default {
       console.log(publicKey)
       this.userPublicKeyMultibase = publicKey;
       this.address = accounts[0];
-      const res = await this.generateDIDDoc(this.address)  
-      await this.generateDiD()
+      const didId = `did:hid:testnet:${this.address}`
+      const resolveResult = await this.resolveDID(didId)
+      const res = await this.generateDIDDoc(this.address) 
       console.log(res)      
+      if(resolveResult.didDocumentMetadata===null){        
+        const signature = await window.web3.eth.personal.sign(this.getDIDDocJSONString,this.address)
+        const payload ={                    
+          signature,
+          address:this.address        
+        }        
+        const regDID = await this.registerDID(payload)
+        console.log(regDID)        
+      }      
+      await this.connectEDV()
+      } catch (error) {
+        this.toast(error.message,'error')
+      }       
     },
     async fetchAllVcFn() {
       try {
@@ -291,8 +307,9 @@ export default {
         this.toast(error, "error");
       }
     },
-    async generateDiD() {
-      const verificationMethod = {
+    async connectEDV() {
+      try {
+        const verificationMethod = {
         id: this.didDoc.id + "#" + `eip155:1:${this.address}`,
         type: "EcdsaSecp256k1RecoveryMethod2020",
         controller: this.didDoc.id,
@@ -313,6 +330,9 @@ export default {
         verificationMethod,
       }
       await this.initEdv(payload)
+      } catch (error) {
+        this.toast(error,'error')
+      }      
     },
     async importScore() {
       if(this.isImported){
