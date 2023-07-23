@@ -5,7 +5,7 @@
       :can-cancel="true"
       :is-full-page="fullPage"
     ></loading>
-    <h1>Game 2</h1>
+    <h1>Reputation Odyssey</h1>
     <div class="container d-flex">
       <b-card class="custom-card">
         <div class="text-center" v-if="!isLoggedId">
@@ -23,7 +23,7 @@
                 <i class="fa fa-gamepad"></i> Current Level: {{ level }}
               </h5>
             </div>
-            <div class="game-con">
+            <div class="game-con w-100">
               <b-button class="text-right" variant="primary" @click="start">{{
                 isStarted ? "Reset" : "Start Playing"
               }}</b-button>
@@ -46,69 +46,73 @@
               </div>
             </div>
             <div v-if="showImportBtn" class="mt-4 or-div">
-              <p class="mt-">OR</p>
+              <p>OR</p>
               <b-button variant="primary" @click="importScore">
                 Import Score Credential</b-button
               >
             </div>
           </div>
-          <div class="profile-container ml-4 text-left" v-if="isLoggedId">
-            <b-card class="text-center cardp">
-              <h4><strong>Profile</strong></h4>
-              <div class="text-left">
-                <ul style="list-style: none; padding: 0; margin: 0">
-                  <li style="display: flex; align-items: center">
-                    <strong style="margin-right: 10px">DID:</strong>
-                    <div class="d-flex align-items-center">
-                      <span style="margin-right: 10px">{{
-                        truncate1(didDoc.id, 30)
-                      }}</span>
-                      <i
-                        class="fas fa-copy copy-icon"
-                        @click="copyToClipboard(didDoc.id, 'DID')"
-                      ></i>
-                    </div>
-                  </li>
-                  <li style="display: flex; align-items: center">
-                    <strong style="margin-right: 10px">EDV ID:</strong>
-                    <div class="d-flex align-items-center">
-                      <span style="margin-right: 10px">{{
-                        truncate1(`hs:edv:${didDoc.id}`, 30)
-                      }}</span>
-                      <i
-                        class="fas fa-copy copy-icon"
-                        @click="
-                          copyToClipboard(`hs:edv:${didDoc.id}`, 'EDV Id')
-                        "
-                      ></i>
-                    </div>
-                  </li>
-                  <li style="display: flex; align-items: center">
-                    <strong style="margin-right: 10px">Controller:</strong>
-                    <div class="d-flex align-items-center">
-                      <span style="margin-right: 10px">{{
-                        truncate1(edvConfig.controller, 25)
-                      }}</span>
-                      <i
-                        class="fas fa-copy copy-icon"
-                        @click="
-                          copyToClipboard(edvConfig.controller, 'Controller')
-                        "
-                      ></i>
-                    </div>
-                  </li>
-                </ul>
-                <div class="text-center">
-                  <b-button class="mt-2" variant="primary" @click="disconnect"
-                    >Disconnect
-                  </b-button>
-                </div>
+        </div>
+      </b-card>
+      <b-card class="text-center ml-4 cardp" v-if="isLoggedId">
+        <h4><strong>Profile</strong></h4>
+
+        <div class="text-left">
+          <ul style="list-style: none; padding: 0; margin: 0">
+            <li style="display: flex; align-items: center">
+              <strong style="margin-right: 10px">DID:</strong>
+
+              <div class="d-flex align-items-center">
+                <a style="margin-right: 10px" :href="`https://explorer.hypersign.id/hypersign-testnet/identity/${didDoc.id}`" target="_blank">{{
+                  truncate1(didDoc.id, 30)
+                }}</a>
+
+                <i
+                  class="fas fa-copy copy-icon"
+                  @click="copyToClipboard(didDoc.id, 'DID')"
+                ></i>
               </div>
-            </b-card>
+            </li>
+
+            <li style="display: flex; align-items: center">
+              <strong style="margin-right: 10px">EDV ID:</strong>
+
+              <div class="d-flex align-items-center">
+                <span style="margin-right: 10px">{{
+                  truncate1(`hs:edv:${didDoc.id}`, 30)
+                }}</span>
+
+                <i
+                  class="fas fa-copy copy-icon"
+                  @click="copyToClipboard(`hs:edv:${didDoc.id}`, 'EDV Id')"
+                ></i>
+              </div>
+            </li>
+
+            <li style="display: flex; align-items: center">
+              <strong style="margin-right: 10px">Controller:</strong>
+
+              <div class="d-flex align-items-center">
+                <span style="margin-right: 10px">{{
+                  truncate1(edvConfig.controller, 25)
+                }}</span>
+
+                <i
+                  class="fas fa-copy copy-icon"
+                  @click="copyToClipboard(edvConfig.controller, 'Controller')"
+                ></i>
+              </div>
+            </li>
+          </ul>
+
+          <div class="text-center">
+            <b-button class="mt-2" variant="primary" @click="disconnect"
+              >Disconnect
+            </b-button>
           </div>
         </div>
       </b-card>
-    </div>
+    </div>   
     <hf-pop-up Id="level-cross-popup" Size="lg" :keepHeader="true">
       <div class="text-center">
         <h2><strong>Congrats 🎉</strong></h2>
@@ -278,6 +282,7 @@ export default {
       this.isStarted = false;
       this.accpetCred = false;
       this.showImportBtn = true;
+      this.isLoading = false
     },
     increaseScore() {
       if (this.score >= 200) {
@@ -431,9 +436,10 @@ export default {
 </script>
 <style scoped>
 .or-div {
-  margin-left: 15rem;
+  margin-left: 7rem;
 }
 .row {
+  cursor: pointer;
   height: 300px;
   border: 1px solid black;
   display: flex;
@@ -444,8 +450,9 @@ export default {
   width: 90%;
 }
 .game-con {
-  margin-top: 5rem;
-  margin-left: 15rem;
+  /* margin-top: 5rem; */
+  /* justify-self: center; */
+  margin-left: 4rem;
 }
 .acc-cont b-button {
   width: 100px; /* Adjust the width as per your requirement */
@@ -484,12 +491,9 @@ export default {
 }
 
 .profile-container {
-  flex: 1;
   max-height: 200px;
 }
-.cardp {
-  display: flex;
-  float: right;
+.cardp {        
   width: 350px;
   max-height: 200px;
 }
