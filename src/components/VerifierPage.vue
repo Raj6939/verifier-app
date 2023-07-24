@@ -48,7 +48,7 @@
             <div v-if="showImportBtn" class="mt-4 or-div">
               <p>OR</p>
               <b-button variant="primary" @click="importScore">
-                Import Score Credential</b-button
+                Import DID Powered Credential</b-button
               >
             </div>
           </div>

@@ -164,7 +164,7 @@ const holderStore = {
               equals: [
                 {
                   "content.credentialSchema.id":
-                    "sch:hid:testnet:zCMDMsfjziPSWmkQdgdvbts6FHuyJVHzXtobKct2kSnfA:1.0",
+                    "sch:hid:testnet:zD83yGx4Nk64BzvQQjor3hBDNfyDoKmBcckwE9cSssvA3:1.0",
                 },
               ],
             })
