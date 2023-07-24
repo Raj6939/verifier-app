@@ -1,4 +1,4 @@
-# verifier-app
+# Reputation-Odyssey
 
 ## Project setup
 ```
