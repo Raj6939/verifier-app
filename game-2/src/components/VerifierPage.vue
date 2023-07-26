@@ -4,8 +4,8 @@
       :active.sync="isLoading"
       :can-cancel="true"
       :is-full-page="fullPage"
-    ></loading>
-    <h1>Game-1</h1>    
+    ></loading>    
+    <h1> Game-2</h1>
     <div class="container d-flex">
       <b-card class="custom-card">
         <div class="text-center" v-if="!isLoggedId">
@@ -24,7 +24,7 @@
               </h5>
             </div>
             <div class="game-con w-100">
-              <b-button class="text-right" variant="primary" @click="start">{{
+              <b-button class="text-right" variant="primary" @click.prevent="start">{{
                 isStarted ? "Reset" : "Start Playing"
               }}</b-button>
               <step-progress
@@ -37,18 +37,15 @@
                 :line-thickness="linethickness"
                 :passive-thickness="passivethickness"
               ></step-progress>
-              <div class="row mt-4 ml-4">
-                <div class="box" @mousemove="increaseScore">
-                  <span class="p-2">
-                    Move your cursor inside this box to play!
-                  </span>
-                </div>
+              <div class="game mt-4 ml-4">
+                <div :class="['dino', { 'jump': isJumping }]" tabindex="0"></div>
+                <div class="cactus" :class="{ 'cactus-animated': isStarted }" ref="cactusRef"></div>
               </div>
             </div>
             <div v-if="showImportBtn" class="mt-4 or-div">
               <p>OR</p>
               <b-button variant="primary" @click="importScore">
-                Import Game-2 Score Credential</b-button
+                Import Game-1 Score Credential</b-button
               >
             </div>
           </div>
@@ -57,7 +54,6 @@
       <b-card class="ml-4" v-if="isLoggedId">
       <b-card class="text-center cardp" v-if="isLoggedId">
         <h4><strong>Profile</strong></h4>
-
         <div class="text-left">
           <ul style="list-style: none; padding: 0; margin: 0">
             <li style="display: flex; align-items: center">
@@ -112,7 +108,9 @@
             </b-button>
           </div>
         </div>
-      </b-card>
+        <div>               
+        </div>
+      </b-card>      
       </b-card>
     </div>   
     <hf-pop-up Id="level-cross-popup" Size="lg" :keepHeader="true">
@@ -180,6 +178,11 @@ export default {
   },
   data() {
     return {
+      dino:null,
+      cactus:null,
+      isJumping: false,
+    isGameOver: false,
+    gameLoop:null,
       isLoading: false,
       fullPage: true,
       showImportBtn: true,
@@ -203,10 +206,14 @@ export default {
   },
   async created() {
     await this.authenticateEntity();
-  },
-  mounted() {
     this.initVpClass();
-  },
+    this.gameLoop = setInterval(this.checkCollision,10)
+    document.addEventListener('keydown', this.handleKeyDown);
+  },  
+  beforeDestroy() {
+    clearInterval(this.gameLoop);
+    document.removeEventListener('keydown', this.jump);
+  },  
   methods: {
     ...mapActions("holderStore", [
       "generateDIDDoc",
@@ -216,6 +223,7 @@ export default {
       "insertCredToEdv",
       "preparePresentation",
       "initVpClass",
+      "fetchAllDocs"
     ]),
     ...mapActions("issuerStore", [
       "authenticateEntity",
@@ -224,6 +232,11 @@ export default {
       "resolveDID",
     ]),
     ...mapMutations("holderStore", ["setLogginStatus"]),
+     handleKeyDown(event) {
+      if (this.isStarted && event.key === ' ') {
+        this.jump();
+      }
+    },
     copyToClipboard(id, content) {
       if (id) {
         navigator.clipboard
@@ -242,7 +255,9 @@ export default {
       this.showImportBtn = false;
     },
     async acceptCredBtn() {
-      const vcFieldToSend = {
+      try {
+        this.isLoading = true
+        const vcFieldToSend = {
         score: this.score,
         level: this.level,
       };
@@ -254,6 +269,11 @@ export default {
           this.accpetCred = this.level === 1 ? true : false;
         }
       }
+      } catch (error) {
+        this.toast(error,'error')
+      } finally{
+        this.isLoading = false
+      }
     },
     disconnect() {
       this.$store.commit("holderStore/setLogginStatus", false);
@@ -262,10 +282,43 @@ export default {
       this.reset();
     },
     start() {
+       const clickEvent = new MouseEvent('click');
+      window.dispatchEvent(clickEvent);
+      this.dino = document.getElementById("dino");
+      this.cactus = document.getElementById("cactus")
+      this.cactus = this.$refs.cactusRef; 
       if (this.isStarted) {
         return this.reset();
       }
       this.isStarted = true;
+      this.cactus.classList.add("cactus-animated");
+    },
+    checkCollision() {
+      if(this.isStarted){
+      this.dino = this.$el.querySelector('.dino');
+      this.cactus = this.$el.querySelector('.cactus');
+      const dinoTop = parseInt(window.getComputedStyle(this.dino).getPropertyValue('top'));
+      const cactusLeft = parseInt(window.getComputedStyle(this.cactus).getPropertyValue('left'));
+
+      if (cactusLeft < 50 && cactusLeft > 0 && dinoTop >= 140) {
+        this.isGameOver = true;
+        console.log('collison')        
+        this.isGameOver = true        
+      }
+      }      
+      else{        
+        return 
+      }
+    },
+    jump() { 
+      console.log('hi')
+      if (!this.isJumping) {
+        this.isJumping = true;        
+        this.increaseScore()
+        setTimeout(() => {
+          this.isJumping = false;
+        }, 300);
+      }
     },
     async verify() {
       const params = {
@@ -285,26 +338,34 @@ export default {
       this.accpetCred = false;
       this.showImportBtn = true;
       this.isLoading = false
+      this.cactus = null;
+      this.dino = null;
     },
     increaseScore() {
       if (this.score >= 200) {
         return;
       }
       if (this.isStarted) {
-        if (this.score === 99) {
+        if (this.score >= 90) {
           this.showImportBtn = false;
           this.level = 1;
           this.currentStep = 1;
+          this.cactus = null;
+          this.dino = null;
+          this.isStarted = false;
           this.$root.$emit("bv::show::modal", "level-cross-popup");
         }
-        if (this.score === 199) {
+        if (this.score >= 190) {
           this.isImported = false;
           this.showImportBtn = false;
           this.currentStep = 2;
-          this.level += 1;
+          this.level += 10;
+          this.isStarted = false;
+          this.cactus = null;
+          this.dino = null;
           this.$root.$emit("bv::show::modal", "level-cross-popup");
         }
-        this.score += 1;
+        this.score += 10;
       }
     },
     async connectMetamask() {
@@ -345,13 +406,11 @@ export default {
     },
     async fetchAllVcFn() {
       try {
-        if (!this.didDoc) {
-          throw new Error("Connect Metamask in DID tab");
+        if (!this.isLoggedId) {
+          throw new Error("Connect Metamask");
         }
-        const allVc = await this.edvClient.fetchAllDocs({
-          edvId: `hs:edv:${this.didDoc.id}`,
-        });
-        this.fetchEncryptedCred = allVc;
+        const allDocs = await this.fetchAllDocs()
+        console.log(allDocs)
       } catch (error) {
         this.toast(error, "error");
       }
@@ -437,10 +496,74 @@ export default {
 };
 </script>
 <style scoped>
+.game {
+  width: 600px;
+  height: 200px;
+  border: 1px solid black;
+  margin: auto;
+}
+
+.dino {
+  margin-left: 50px;
+  width: 50px;
+  height: 50px;
+  background-image: url('../assets/trex.png');
+  background-size: 50px 50px;
+  position: relative;
+  top: 150px;
+}
+
+.jump {
+  animation: jump 0.2s linear;
+}
+
+@keyframes jump {
+  0% {
+    top: 150px;
+  }
+
+  30% {
+    top: 130px;
+  }
+
+  50% {
+    top: 80px;
+  }
+
+  80% {
+    top: 130px;
+  }
+
+  100% {
+    top: 150px;
+  }
+}
+
+.cactus {  
+  width: 20px;
+  height: 40px;
+  position: relative;
+  top: 110px;
+  left: 570px;  
+  background-image: url("../assets/cactus.png");
+  background-size: 20px 40px;  
+}
+.cactus.cactus-animated {
+  animation: block 1s infinite linear;
+}
+@keyframes block {
+  0% {
+    left: 580px;
+  }
+
+  100% {
+    left: -20px;
+  }
+}
 .or-div {
   margin-left: 7rem;
 }
-.row {
+/* .game {
   cursor: pointer;
   height: 300px;
   border: 1px solid black;
@@ -450,12 +573,7 @@ export default {
   font-size: 24px;
   font-weight: bold;
   width: 90%;
-}
-.game-con {
-  /* margin-top: 5rem; */
-  /* justify-self: center; */
-  margin-left: 4rem;
-}
+} */
 .acc-cont b-button {
   width: 100px; /* Adjust the width as per your requirement */
   color: rgba(86, 52, 105, 1) 98%;
