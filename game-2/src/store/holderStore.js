@@ -36,8 +36,19 @@ const holderStore = {
     encryptedVc: null,
     decryptedVc: null,
     signedVp: null,
+    game2EncryptedVc:[]
   },
   getters: {
+    getGame2EncryptedVc(state){
+      if(state.game2EncryptedVc.length){
+        return state.game2EncryptedVc
+      }
+    },
+    getAllEncryptedVc(state){
+      if(state.encryptedVc!==null){
+        return state.encryptedVc
+      }
+    },
     getDidDocId(state) {
       if (state.didDoc !== null) {
         return state.didDoc.id;
@@ -71,9 +82,13 @@ const holderStore = {
     },
     setLogginStatus(state, payload) {
       if (!payload) {
-        (state.didDoc = null),
-          (state.edvClient = null),
-          (state.edvConfig = null);
+        state.didDoc = null,
+        state.edvClient = null,
+        state.edvConfig = null,
+        state.encryptedVc= null,
+        state.decryptedVc= null,
+        state.signedVp= null,
+        state.game2EncryptedVc=[]
       }
       state.isLoggedIn = payload;
     },
@@ -85,6 +100,9 @@ const holderStore = {
     },
     setEncryptedVc(state, payload) {
       state.encryptedVc = payload;
+    },
+    setEncryptedVcForGame2(state,payload) {
+      state.game2EncryptedVc = payload
     },
     setDecryptedVc(state, payload) {
       state.decryptedVc = payload;
@@ -170,16 +188,38 @@ const holderStore = {
         }
       })
     },
-    queryCredFromEdv: ({ state, commit }) => {
+    queryGame2Credential:({state,commit},payload) =>{      
       return new Promise((resolve, reject) => {
         try {
           state.edvClient
             .Query({
-              edvId: `hs:edv:${state.didDoc.id}`,
+              edvId: payload.edvId,
               equals: [
                 {
                   "content.credentialSchema.id":
-                    "sch:hid:testnet:zD83yGx4Nk64BzvQQjor3hBDNfyDoKmBcckwE9cSssvA3:1.0",
+                    payload.id,
+                },
+              ],
+            })
+            .then((data) => {              
+              commit("setEncryptedVcForGame2", data);
+              resolve(data);
+            });
+        } catch (error) {
+          reject(error);
+        }
+      });
+    },
+    queryCredFromEdv: ({ state, commit },payload) => {
+      return new Promise((resolve, reject) => {
+        try {
+          state.edvClient
+            .Query({
+              edvId: payload.edvId,
+              equals: [
+                {
+                  "content.credentialSchema.id":
+                    payload.id,
                 },
               ],
             })
@@ -198,9 +238,9 @@ const holderStore = {
         try {
           state.edvClient
             .decryptDocument({
-              encryptedDocument: state.encryptedVc[0].encryptedData,
+              encryptedDocument: payload.encData,
               recipient: {
-                id: payload,
+                id: payload.keyAgreementKeyPairId,
                 type: "X25519KeyAgreementKeyEIP5630",
               },
             })

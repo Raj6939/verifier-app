@@ -119,7 +119,7 @@ const issuerStore = {
           const url = config.baseUrl + "/api/v1/credential/issue";
           const body = {
             schemaId:
-              "sch:hid:testnet:zCMDMsfjziPSWmkQdgdvbts6FHuyJVHzXtobKct2kSnfA:1.0",
+              "sch:hid:testnet:z5kpU2xtHhAqSXDCNFMY4T8VDeUdgGfJZHYqKw4sa2Bkk:1.0",
             subjectDid: rootGetters["holderStore/getDidDocId"],
             issuerDid:
               "did:hid:testnet:zHfG5jtCiZLarsiPENH4LZ1u9uUfCWpiXicWshJFZQXTn",

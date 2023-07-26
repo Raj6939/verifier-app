@@ -47,7 +47,7 @@
             </div>
             <div v-if="showImportBtn" class="mt-4 or-div">
               <p>OR</p>
-              <b-button variant="primary" @click="importScore">
+              <b-button variant="primary" @click="importScore('sch:hid:testnet:z3GnmWyHiZjKoFaU8Af44mN1h9FNMZbrDzYvTHbD3KbdJ:1.0')">
                 Import Game-2 Score Credential</b-button
               >
             </div>
@@ -107,12 +107,38 @@
           </ul>
 
           <div class="text-center">
-            <b-button class="mt-2" variant="primary" @click="disconnect"
+            <b-button class="mt-2" variant="danger" @click="disconnect"
               >Disconnect
             </b-button>
           </div>
         </div>
       </b-card>
+      <hr>      
+      <div class="mt-4 text-right">        
+        <b-button         
+        @click="fetchAllVcFn('sch:hid:testnet:z5kpU2xtHhAqSXDCNFMY4T8VDeUdgGfJZHYqKw4sa2Bkk:1.0')"
+        variant="primary"       
+        ><i class="fa fa-sync mr-2"></i>Fetch Creds</b-button>
+      </div>      
+      <div
+      class="text-center"
+      style="max-height: 400px; overflow-y: auto;">
+      <div
+      class="mt-4"      
+      v-for="(cred, index) in getAllEncryptedVc" :key="index">
+      <b-card
+      title="Creds"
+      style="max-width:350px;"
+      class="mb-2">
+      <b-card-text>
+        {{truncate1(cred.id,30)}}        
+      </b-card-text>
+      <b-button variant="primary" @click="decryptCred(cred)"
+                  >Decrypt VC</b-button
+        >
+      </b-card>
+      </div>
+      </div>
       </b-card>
     </div>   
     <hf-pop-up Id="level-cross-popup" Size="lg" :keepHeader="true">
@@ -148,6 +174,15 @@
         >
       </div>
     </hf-pop-up>
+    <hf-pop-up Id="decrypted-cred" Size="lg" :keepHeader="true">      
+        <h2 class="text-ceneter"><strong>Your Credential</strong></h2>
+          <json-viewer
+        :value="decryptedCredential"
+        :expanded="true"
+        :depth="2"
+        :copyable="true"
+      ></json-viewer>
+    </hf-pop-up>
   </div>
 </template>
 
@@ -176,7 +211,7 @@ export default {
       showDecryptedCred: (state) => state.holderStore.decryptedVc,
       did: (state) => state.holderStore.address,
     }),
-    ...mapGetters("holderStore", ["getDIDDocJSONString"]),
+    ...mapGetters("holderStore", ["getDIDDocJSONString","getAllEncryptedVc"]),
   },
   data() {
     return {
@@ -199,6 +234,7 @@ export default {
       publicKeyMultibase: "",
       fetchEncryptedCred: [],
       keyAgreementKeyPair: {},
+      decryptedCredential:{}
     };
   },
   async created() {
@@ -216,6 +252,7 @@ export default {
       "insertCredToEdv",
       "preparePresentation",
       "initVpClass",
+      "queryGame2Credential",
     ]),
     ...mapActions("issuerStore", [
       "authenticateEntity",
@@ -242,7 +279,9 @@ export default {
       this.showImportBtn = false;
     },
     async acceptCredBtn() {
-      const vcFieldToSend = {
+      this.isLoading = true
+      try {
+        const vcFieldToSend = {
         score: this.score,
         level: this.level,
       };
@@ -254,6 +293,13 @@ export default {
           this.accpetCred = this.level === 1 ? true : false;
         }
       }
+      } catch (error) {
+        this.toast(error,'error')
+      }
+      finally{
+        this.isLoading = false
+      }
+      
     },
     disconnect() {
       this.$store.commit("holderStore/setLogginStatus", false);
@@ -307,6 +353,29 @@ export default {
         this.score += 1;
       }
     },
+    async decryptCred(cred){
+      this.isLoading = true
+      try {
+        if(this.address===""){
+          throw new Error('Connect Metamask')
+        }
+        console.log(cred.encryptedData)
+      const dataToQuery = {
+          encData:cred.encryptedData,
+          keyAgreementKeyPairId:this.keyAgreementKeyPair.id
+        }
+
+        const res = await this.decryptVc(dataToQuery);  
+        console.log(res)
+        this.decryptedCredential=res.content
+        this.$root.$emit("bv::show::modal", "decrypted-cred");
+      } catch (error) {
+        this.toast(error,'error')
+      }
+      finally{
+        this.isLoading = false
+      }
+    },
     async connectMetamask() {
       this.isLoading = true;
       try {
@@ -343,17 +412,25 @@ export default {
         this.isLoading = false;
       }
     },
-    async fetchAllVcFn() {
+    async fetchAllVcFn(id) {
+      this.isLoading = true
       try {
         if (!this.didDoc) {
           throw new Error("Connect Metamask in DID tab");
         }
-        const allVc = await this.edvClient.fetchAllDocs({
+        const allVc = await this.queryCredFromEdv({
           edvId: `hs:edv:${this.didDoc.id}`,
+          id
         });
+        if(!allVc.length){
+          throw new Error('No Credential Found issued by this game')
+        }
         this.fetchEncryptedCred = allVc;
       } catch (error) {
         this.toast(error, "error");
+      }
+      finally{
+        this.isLoading=false
       }
     },
     async connectEDV() {
@@ -385,7 +462,7 @@ export default {
         this.isLoading = false;
       }
     },
-    async importScore() {
+    async importScore(id) {
       this.isLoading = true;
       try {
         if (this.isImported) {
@@ -394,9 +471,20 @@ export default {
         if (this.didDoc === null) {
           return this.toast("Connect Metamask", "error");
         }
-        const queryEdv = await this.queryCredFromEdv();
+        const queryEdv = await this.queryGame2Credential({
+          edvId: `hs:edv:${this.didDoc.id}`,
+          id
+        });
         console.log(queryEdv);
-        const res = await this.decryptVc(this.keyAgreementKeyPair.id);
+        if(!queryEdv.length){
+          throw new Error('No Score Cred found')
+        }
+        console.log(this.keyAgreementKeyPair.id)
+        const dataToQuery = {
+          encData:queryEdv[0].encryptedData,
+          keyAgreementKeyPairId:this.keyAgreementKeyPair.id
+        }
+        const res = await this.decryptVc(dataToQuery);
         const prepareVp = await this.preparePresentation();
         const result = await this.hypersignVP.verifyByClientSpec({
           signedPresentation: prepareVp,

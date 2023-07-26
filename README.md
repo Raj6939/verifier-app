@@ -1,10 +1,10 @@
 # Reputation-Odyssey
-Reputation-Odyssey is the Game Reputation backpack for the game players. With this, players can import their game reputation into any supported game and can use it.
-Reputation-Odyssey demonstrates one of the use cases of SSI(Self-sovereign-Identity) with Hypersign SSI SDK.
+The Ultimate Game Reputation Backpack for Players. This innovative tool allows players to import and utilize their game reputation in any supported game seamlessly. Reputation-Odyssey showcases the power of Self-Sovereign Identity (SSI) with Hypersign SSI SDK, providing a secure and decentralized solution.
 
 
 ## Tech Used
-It uses SSI SDK for all SSI capabilities including the creation of DID, registering it on the chain, issuing score credentials, and Encrypted Data Vault(EDV) SDK for storing the Verifiable credentials(VC) in the user's Vault(EDV)
+Our platform harnesses the power of Hypersign SSI SDK, empowering users with a wide range of Self-Sovereign Identity (SSI) capabilities. Each Gamer Profile is uniquely assigned a Decentralized Identifier (DID), which is seamlessly registered on the blockchain. Moreover, the platform facilitates the issuance of score credentials and enhances security by utilizing the Encrypted Data Vault (EDV) SDK to securely store Verifiable Credentials (VC) within the user's personal Vault (EDV).
+
 
 ## Project setup Instructions
 1. Clone the repository or Fork
@@ -24,3 +24,9 @@ It uses SSI SDK for all SSI capabilities including the creation of DID, register
   npm install
   npm run serve
 ```
+## Game Play
+
+1.  login with Metammask wallet on game 1
+2.  Play the game annd collect 100 score credential on completion of stage 1.
+3.  login to game 2 using the same Metamask wallet
+4.  You can either play the stage1 or click on collect credential from game1 that will help you jump stage1 to stage2 directly

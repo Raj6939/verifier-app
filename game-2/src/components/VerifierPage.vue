@@ -6,6 +6,7 @@
       :is-full-page="fullPage"
     ></loading>    
     <h1> Game-2</h1>
+    
     <div class="container d-flex">
       <b-card class="custom-card">
         <div class="text-center" v-if="!isLoggedId">
@@ -42,9 +43,9 @@
                 <div class="cactus" :class="{ 'cactus-animated': isStarted }" ref="cactusRef"></div>
               </div>
             </div>
-            <div v-if="showImportBtn" class="mt-4 or-div">
+            <div v-if="showImportBtn" class="mt-4">
               <p>OR</p>
-              <b-button variant="primary" @click="importScore">
+              <b-button variant="primary" @click="importScore('sch:hid:testnet:z5kpU2xtHhAqSXDCNFMY4T8VDeUdgGfJZHYqKw4sa2Bkk:1.0')">
                 Import Game-1 Score Credential</b-button
               >
             </div>
@@ -101,16 +102,41 @@
               </div>
             </li>
           </ul>
-
           <div class="text-center">
-            <b-button class="mt-2" variant="primary" @click="disconnect"
+            <b-button class="mt-2" variant="danger" @click="disconnect"
               >Disconnect
             </b-button>
           </div>
         </div>
         <div>               
         </div>
-      </b-card>      
+      </b-card>  
+      <hr>
+      <div class="mt-4 text-right">        
+        <b-button         
+        @click="fetchAllVcFn('sch:hid:testnet:z3GnmWyHiZjKoFaU8Af44mN1h9FNMZbrDzYvTHbD3KbdJ:1.0')"
+        variant="primary"       
+        ><i class="fa fa-sync mr-2"></i>Fetch Creds</b-button>
+      </div>
+      <div
+      class="text-center"
+      style="max-height: 400px; overflow-y: auto;">
+      <div
+      class="mt-4"      
+      v-for="(cred, index) in getAllEncryptedVc" :key="index">
+      <b-card
+      title="Creds"
+      style="max-width:350px;"
+      class="mb-2">
+      <b-card-text>
+        {{truncate1(cred.id,30)}}        
+      </b-card-text>
+      <b-button variant="primary" @click="decryptCred(cred)"
+                  >Decrypt VC</b-button
+        >
+      </b-card>
+      </div>
+      </div>
       </b-card>
     </div>   
     <hf-pop-up Id="level-cross-popup" Size="lg" :keepHeader="true">
@@ -146,6 +172,15 @@
         >
       </div>
     </hf-pop-up>
+    <hf-pop-up Id="decrypted-cred" Size="lg" :keepHeader="true">      
+        <h2 class="text-ceneter"><strong>Your Credential</strong></h2>
+          <json-viewer
+        :value="decryptedCredential"
+        :expanded="true"
+        :depth="2"
+        :copyable="true"
+      ></json-viewer>
+    </hf-pop-up>
   </div>
 </template>
 
@@ -174,7 +209,7 @@ export default {
       showDecryptedCred: (state) => state.holderStore.decryptedVc,
       did: (state) => state.holderStore.address,
     }),
-    ...mapGetters("holderStore", ["getDIDDocJSONString"]),
+    ...mapGetters("holderStore", ["getDIDDocJSONString","getAllEncryptedVc"]),
   },
   data() {
     return {
@@ -202,6 +237,7 @@ export default {
       publicKeyMultibase: "",
       fetchEncryptedCred: [],
       keyAgreementKeyPair: {},
+      decryptedCredential:{}
     };
   },
   async created() {
@@ -223,7 +259,8 @@ export default {
       "insertCredToEdv",
       "preparePresentation",
       "initVpClass",
-      "fetchAllDocs"
+      "fetchAllDocs",
+      "queryGame2Credential",
     ]),
     ...mapActions("issuerStore", [
       "authenticateEntity",
@@ -254,9 +291,9 @@ export default {
       this.accpetCred = false;
       this.showImportBtn = false;
     },
-    async acceptCredBtn() {
-      try {
-        this.isLoading = true
+    async acceptCredBtn() {      
+      this.isLoading = true
+      try {        
         const vcFieldToSend = {
         score: this.score,
         level: this.level,
@@ -281,9 +318,30 @@ export default {
       this.level = 0;
       this.reset();
     },
-    start() {
-       const clickEvent = new MouseEvent('click');
-      window.dispatchEvent(clickEvent);
+    async decryptCred(cred){
+      this.isLoading = true
+      try {
+        if(this.address===""){
+          throw new Error('Connect Metamask')
+        }
+        console.log(cred.encryptedData)
+      const dataToQuery = {
+          encData:cred.encryptedData,
+          keyAgreementKeyPairId:this.keyAgreementKeyPair.id
+        }
+
+        const res = await this.decryptVc(dataToQuery);  
+        console.log(res)
+        this.decryptedCredential=res.content
+        this.$root.$emit("bv::show::modal", "decrypted-cred");
+      } catch (error) {
+        this.toast(error,'error')
+      }
+      finally{
+        this.isLoading = false
+      }
+    },
+    start() {             
       this.dino = document.getElementById("dino");
       this.cactus = document.getElementById("cactus")
       this.cactus = this.$refs.cactusRef; 
@@ -346,7 +404,7 @@ export default {
         return;
       }
       if (this.isStarted) {
-        if (this.score >= 90) {
+        if (this.score === 90) {
           this.showImportBtn = false;
           this.level = 1;
           this.currentStep = 1;
@@ -355,7 +413,7 @@ export default {
           this.isStarted = false;
           this.$root.$emit("bv::show::modal", "level-cross-popup");
         }
-        if (this.score >= 190) {
+        if (this.score === 190) {
           this.isImported = false;
           this.showImportBtn = false;
           this.currentStep = 2;
@@ -404,15 +462,25 @@ export default {
         this.isLoading = false;
       }
     },
-    async fetchAllVcFn() {
+    async fetchAllVcFn(id) {
       try {
         if (!this.isLoggedId) {
           throw new Error("Connect Metamask");
         }
-        const allDocs = await this.fetchAllDocs()
+         const allDocs = await this.queryCredFromEdv({
+          edvId: `hs:edv:${this.didDoc.id}`,
+          id
+        });
+        if(!allDocs.length){
+          throw new Error('No Credential Found')
+        }
         console.log(allDocs)
+        this.fetchEncryptedCred = allDocs
       } catch (error) {
         this.toast(error, "error");
+      }
+      finally {
+        this.isLoading = false
       }
     },
     async connectEDV() {
@@ -444,7 +512,7 @@ export default {
         this.isLoading = false;
       }
     },
-    async importScore() {
+    async importScore(id) {
       this.isLoading = true;
       try {
         if (this.isImported) {
@@ -453,9 +521,20 @@ export default {
         if (this.didDoc === null) {
           return this.toast("Connect Metamask", "error");
         }
-        const queryEdv = await this.queryCredFromEdv();
+        const queryEdv = await this.queryGame2Credential({
+          edvId: `hs:edv:${this.didDoc.id}`,
+          id
+        });
         console.log(queryEdv);
-        const res = await this.decryptVc(this.keyAgreementKeyPair.id);
+        if(!queryEdv.length){
+          throw new Error('No Score Cred found')
+        }
+        console.log(this.keyAgreementKeyPair.id)
+        const dataToQuery = {
+          encData:queryEdv[0].encryptedData,
+          keyAgreementKeyPairId:this.keyAgreementKeyPair.id
+        }
+        const res = await this.decryptVc(dataToQuery);
         const prepareVp = await this.preparePresentation();
         const result = await this.hypersignVP.verifyByClientSpec({
           signedPresentation: prepareVp,
@@ -514,7 +593,7 @@ export default {
 }
 
 .jump {
-  animation: jump 0.2s linear;
+  animation: jump 0.3s linear;
 }
 
 @keyframes jump {
@@ -549,7 +628,7 @@ export default {
   background-size: 20px 40px;  
 }
 .cactus.cactus-animated {
-  animation: block 1s infinite linear;
+  animation: block 2s infinite linear;
 }
 @keyframes block {
   0% {
@@ -560,20 +639,6 @@ export default {
     left: -20px;
   }
 }
-.or-div {
-  margin-left: 7rem;
-}
-/* .game {
-  cursor: pointer;
-  height: 300px;
-  border: 1px solid black;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-weight: bold;
-  width: 90%;
-} */
 .acc-cont b-button {
   width: 100px; /* Adjust the width as per your requirement */
   color: rgba(86, 52, 105, 1) 98%;
