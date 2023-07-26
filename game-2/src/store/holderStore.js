@@ -36,9 +36,15 @@ const holderStore = {
     encryptedVc: null,
     decryptedVc: null,
     signedVp: null,
-    game2EncryptedVc:[]
+    game2EncryptedVc:[],
+    userProfile:[]
   },
   getters: {
+    getUserProfile(state){
+      if(state.userProfile.length){
+        return state.userProfile
+      }      
+    },
     getGame2EncryptedVc(state){
       if(state.game2EncryptedVc.length){
         return state.game2EncryptedVc
@@ -115,6 +121,9 @@ const holderStore = {
       console.log(payload);
       state.signedVp = payload;
     },
+    setUserProfile(state,payload) {
+      state.userProfile = payload
+    }
   },
   actions: {
     initVpClass({ commit }) {
@@ -188,6 +197,28 @@ const holderStore = {
         }
       })
     },
+    queryPlayerProfile: ({state,commit},payload) => {
+      return new Promise((resolve,reject) => {
+        try {
+          state.edvClient
+          .Query({
+            edvId: payload.edvId,
+            equals: [
+              {
+                "content.credentialSchema.id":
+                  payload.id,
+              },
+            ],
+          })
+          .then((data) => {            
+            commit("setUserProfile",data)
+            resolve(data)
+          })
+        } catch (error) {
+          reject(error);
+        }
+      })
+    }, 
     queryGame2Credential:({state,commit},payload) =>{      
       return new Promise((resolve, reject) => {
         try {
@@ -254,18 +285,12 @@ const holderStore = {
         }
       });
     },
-    insertCredToEdv: ({ rootGetters, state }, payload) => {
-      console.log(
-        state.didDoc.id.split("#")[0] + "#" + payload.publicKeyMultibase
-      );
-      console.log(payload);
+    insertCredToEdv: ({ state }, payload) => {  
       return new Promise((resolve, reject) => {
         try {
           const dataToAddEdv = {
-            content: rootGetters["issuerStore/getIssuedCred"],
-          };
-          const publicKeyMultibase = payload.id;
-          console.log(publicKeyMultibase);
+            content: payload.issuedCredential,
+          };    
           const did = state.didDoc.id;
           state.edvClient
             .insertDoc({
@@ -276,7 +301,7 @@ const holderStore = {
                   id:
                     state.didDoc.id.split("#")[0] +
                     "#" +
-                    payload.publicKeyMultibase,
+                    payload.keyAgreementKeyPair.publicKeyMultibase,
                   type: "X25519KeyAgreementKeyEIP5630",
                 },
               ],

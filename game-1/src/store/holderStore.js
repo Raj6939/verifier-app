@@ -35,9 +35,15 @@ const holderStore = {
     encryptedVc: null,
     decryptedVc: null,
     signedVp: null,
-    game2EncryptedVc:[]
+    game2EncryptedVc:[],
+    userProfile:[]
   },
   getters: {
+    getUserProfile(state){
+      if(state.userProfile.length){
+        return state.userProfile
+      }      
+    },
     getGame2EncryptedVc(state){
       if(state.game2EncryptedVc.length){
         return state.game2EncryptedVc
@@ -107,13 +113,14 @@ const holderStore = {
       state.decryptedVc = payload;
     },
     initVpClass(state, payload) {
-      console.log(payload);
       state.hypersignVp = payload;
     },
     setSignedVp(state, payload) {
-      console.log(payload);
       state.signedVp = payload;
     },
+    setUserProfile(state,payload) {
+      state.userProfile = payload
+    }
   },
   actions: {
     initVpClass({ commit }) {
@@ -122,7 +129,6 @@ const holderStore = {
         nodeRpcEndpoint: HIDNODE_RPC,
         namespace: HIDNODE_NAMESPACE,
       });
-      console.log(vp);
       commit("initVpClass", vp);
     },
     generateDIDDoc: ({ commit }, payload) => {
@@ -137,8 +143,7 @@ const holderStore = {
             clientSpec: "eth-personalSign",
             address: payload,
           };
-          hypersignDid.createByClientSpec(params).then((resp) => {
-            console.log(resp);
+          hypersignDid.createByClientSpec(params).then((resp) => {            
             commit("setDIDDoc", resp);
             resolve(resp);
           });
@@ -160,8 +165,7 @@ const holderStore = {
             verificationMethod: payload.verificationMethod,
             keyAgreement: payload.keyAgreement,
           };
-          edvClient.registerEdv(config).then((data) => {
-            console.log(data);
+          edvClient.registerEdv(config).then((data) => {            
             state.edvConfig = data;
             commit("setLogginStatus", true);
             commit("setEdvClient", edvClient);
@@ -173,8 +177,29 @@ const holderStore = {
         }
       });
     },
-    queryGame2Credential:({state,commit},payload) =>{
-      console.log(payload)
+    queryPlayerProfile: ({state,commit},payload) => {
+      return new Promise((resolve,reject) => {
+        try {
+          state.edvClient
+          .Query({
+            edvId: payload.edvId,
+            equals: [
+              {
+                "content.credentialSchema.id":
+                  payload.id,
+              },
+            ],
+          })
+          .then((data) => {            
+            commit("setUserProfile",data)
+            resolve(data)
+          })
+        } catch (error) {
+          reject(error);
+        }
+      })
+    },    
+    queryGame2Credential:({state,commit},payload) =>{      
       return new Promise((resolve, reject) => {
         try {
           state.edvClient
@@ -188,7 +213,6 @@ const holderStore = {
               ],
             })
             .then((data) => {
-              console.log(data);
               commit("setEncryptedVcForGame2", data);
               resolve(data);
             });
@@ -198,7 +222,6 @@ const holderStore = {
       });
     },
     queryCredFromEdv: ({ state, commit },payload) => {
-      console.log(payload)
       return new Promise((resolve, reject) => {
         try {
           state.edvClient
@@ -212,7 +235,6 @@ const holderStore = {
               ],
             })
             .then((data) => {
-              console.log(data);
               commit("setEncryptedVc", data);
               resolve(data);
             });
@@ -233,7 +255,6 @@ const holderStore = {
               },
             })
             .then((data) => {
-              console.log(data);
               commit("setDecryptedVc", data.content);
               resolve(data);
             });
@@ -242,18 +263,12 @@ const holderStore = {
         }
       });
     },
-    insertCredToEdv: ({ rootGetters, state }, payload) => {
-      console.log(
-        state.didDoc.id.split("#")[0] + "#" + payload.publicKeyMultibase
-      );
-      console.log(payload);
+    insertCredToEdv: ({ state }, payload) => {            
       return new Promise((resolve, reject) => {
         try {
           const dataToAddEdv = {
-            content: rootGetters["issuerStore/getIssuedCred"],
+            content: payload.issuedCredential,
           };
-          const publicKeyMultibase = payload.id;
-          console.log(publicKeyMultibase);
           const did = state.didDoc.id;
           state.edvClient
             .insertDoc({
@@ -264,7 +279,7 @@ const holderStore = {
                   id:
                     state.didDoc.id.split("#")[0] +
                     "#" +
-                    payload.publicKeyMultibase,
+                    payload.keyAgreementKeyPair.publicKeyMultibase,
                   type: "X25519KeyAgreementKeyEIP5630",
                 },
               ],
@@ -276,7 +291,6 @@ const holderStore = {
               ],
             })
             .then((data) => {
-              console.log(data);
               resolve(data);
             });
         } catch (error) {
@@ -293,9 +307,6 @@ const holderStore = {
               holderDid: getters.getDidDocId,
             })
             .then((data) => {
-              console.log(data);
-              console.log(getters.getDidDocId);
-              console.log(getters.getVerificationMethodId);
               state.hypersignVp
                 .signByClientSpec({
                   presentation: data,
@@ -306,12 +317,10 @@ const holderStore = {
                   domain: "www.hypersign.id",
                 })
                 .then((res) => {
-                  console.log(res);
                   commit("setSignedVp", res);
                   resolve(res);
                 })
                 .catch((error) => {
-                  console.log(error);
                   reject(error);
                 });
             });

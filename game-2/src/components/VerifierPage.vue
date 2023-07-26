@@ -45,7 +45,7 @@
             </div>
             <div v-if="showImportBtn" class="mt-4">
               <p>OR</p>
-              <b-button variant="primary" @click="importScore('sch:hid:testnet:z5kpU2xtHhAqSXDCNFMY4T8VDeUdgGfJZHYqKw4sa2Bkk:1.0')">
+              <b-button variant="primary" @click="importScore()">
                 Import Game-1 Score Credential</b-button
               >
             </div>
@@ -54,9 +54,53 @@
       </b-card>
       <b-card class="ml-4" v-if="isLoggedId">
       <b-card class="text-center cardp" v-if="isLoggedId">
+        <div class="d-flex">
         <h4><strong>Profile</strong></h4>
-        <div class="text-left">
+        <div class="text-right">
+          <b-button title="View Profile" variant="primary" class="rounded-circle mr-2"
+        @click="syncProfile">
+          <b-icon icon="person-fill" aria-hidden="true"></b-icon>
+        </b-button>
+        <b-button title="Disconnect" variant="danger" class="rounded-circle" @click="disconnect">
+          <b-icon icon="power" aria-hidden="true"></b-icon>
+        </b-button>
+        </div>
+        </div>
+        <div class="text-left mt-4">
           <ul style="list-style: none; padding: 0; margin: 0">
+            <li style="display: flex; align-items: center">
+              <strong style="margin-right: 10px">User Handle:</strong>
+
+              <div class="d-flex align-items-center">
+                <a style="margin-right: 10px">{{
+                  userProfile.handle ? userProfile.handle : '---'
+                }}</a>
+
+                <i v-if="userProfile.handle"
+                  class="fas fa-copy copy-icon"
+                  @click="copyToClipboard(userProfile.handle, 'Handle')"
+                ></i>
+              </div>
+            </li>
+            <li style="display: flex; align-items: center">
+              <strong style="margin-right: 10px">Age verification:</strong>
+
+              <div class="d-flex align-items-center">
+                <a style="margin-right: 10px">{{
+                  userProfile.isAboveLegalAge ? 'Yes' :'No'
+                }}</a>
+              </div>
+            </li>
+            <li style="display: flex; align-items: center">
+              <strong style="margin-right: 10px">Theme:</strong>
+
+              <div class="d-flex align-items-center">
+                <a style="margin-right: 10px">{{
+                  userProfile.isDarkMode ? 'Dark' :'Light'
+                }}</a>
+                
+              </div>
+            </li>
             <li style="display: flex; align-items: center">
               <strong style="margin-right: 10px">DID:</strong>
 
@@ -86,37 +130,16 @@
                 ></i>
               </div>
             </li>
-
-            <li style="display: flex; align-items: center">
-              <strong style="margin-right: 10px">Controller:</strong>
-
-              <div class="d-flex align-items-center">
-                <span style="margin-right: 10px">{{
-                  truncate1(edvConfig.controller, 25)
-                }}</span>
-
-                <i
-                  class="fas fa-copy copy-icon"
-                  @click="copyToClipboard(edvConfig.controller, 'Controller')"
-                ></i>
-              </div>
-            </li>
+       
           </ul>
-          <div class="text-center">
-            <b-button class="mt-2" variant="danger" @click="disconnect"
-              >Disconnect
-            </b-button>
-          </div>
-        </div>
-        <div>               
-        </div>
+        </div>        
       </b-card>  
       <hr>
       <div class="mt-4 text-right">        
         <b-button         
-        @click="fetchAllVcFn('sch:hid:testnet:z3GnmWyHiZjKoFaU8Af44mN1h9FNMZbrDzYvTHbD3KbdJ:1.0')"
+        @click="fetchAllVcFn()"
         variant="primary"       
-        ><i class="fa fa-sync mr-2"></i>Fetch Creds</b-button>
+        ><i class="fa fa-sync mr-2"></i>Fetch Score Cred</b-button>
       </div>
       <div
       class="text-center"
@@ -173,13 +196,59 @@
       </div>
     </hf-pop-up>
     <hf-pop-up Id="decrypted-cred" Size="lg" :keepHeader="true">      
-        <h2 class="text-ceneter"><strong>Your Credential</strong></h2>
+        <h2 class="text-center"><strong>Your Score Credential</strong></h2>
           <json-viewer
         :value="decryptedCredential"
         :expanded="true"
         :depth="2"
         :copyable="true"
       ></json-viewer>
+    </hf-pop-up>
+    <hf-pop-up Id="profile-form" Size="lg" :keepHeader="true">
+      <div class="text-center mt-0">        
+        <b-button @click="syncExistingCred"
+        variant="primary"
+        ><i class="fa fa-sync mr-2"></i>Import Existing Settings</b-button>
+        <hr>
+        <p>OR</p>
+        <h3><strong>Complete Your Profile</strong></h3>
+        <div class="centered-alert mt-4 mb-4">          
+          <input type="text" class="form-control w-50"
+          placeholder="Enter game handle you want"
+          v-model="userProfile.handle"
+          >             
+          <div class="row w-50 mt-2">
+            <div class="col-lg-9 col-md-9 text-left">
+              <label for="endDate"
+                  class="col-form-label">Are you above 18: </label>
+            </div>
+            <div class="col-lg-3 col-md-3 mt-2">
+                <b-form-checkbox v-model="userProfile.isAboveLegalAge" name="check-button" switch>
+                </b-form-checkbox>
+            </div>
+          </div>  
+          <div class="row w-50 mt-2">
+            <div class="col-lg-9 col-md-9 text-left">
+              <label for="endDate"
+                  class="col-form-label">Which Theme you want to keep: <br>( light/dark )  </label>
+            </div>
+            <div class="col-lg-3 col-md-3 mt-2">
+                <b-form-checkbox v-model="userProfile.isDarkMode" name="check-button" switch>
+                </b-form-checkbox>
+            </div>
+          </div>
+            <b-button class="mt-2 btn" variant="primary" @click="issueProfileCredential"
+              >Save</b-button
+            >          
+        </div>
+        <b-button
+          v-if="accpetCred"
+          class="mt-2"
+          variant="primary"
+          @click="goToNext"
+          >Play Next Level</b-button
+        >
+      </div>
     </hf-pop-up>
   </div>
 </template>
@@ -190,7 +259,7 @@ import toast from "../utils/toast";
 import multibase from "multibase";
 import { Buffer } from "buffer";
 import HfPopUp from "../elements/hfPopUp.vue";
-import { truncate } from "../utils/hsConstants";
+import { truncate,GAME2_SCORE_CRED,GAME2_PROFILE_CRED,GAME1_SCORE_CRED } from "../utils/hsConstants";
 import StepProgress from "vue-step-progress";
 window.Buffer = Buffer;
 import { mapActions, mapGetters, mapMutations, mapState } from "vuex";
@@ -213,6 +282,11 @@ export default {
   },
   data() {
     return {
+      userProfile:{
+        handle:'',
+        isAboveLegalAge:false,
+        isDarkMode:false
+      },
       dino:null,
       cactus:null,
       isJumping: false,
@@ -261,6 +335,7 @@ export default {
       "initVpClass",
       "fetchAllDocs",
       "queryGame2Credential",
+      "queryPlayerProfile"
     ]),
     ...mapActions("issuerStore", [
       "authenticateEntity",
@@ -286,6 +361,39 @@ export default {
           });
       }
     },
+    async issueProfileCredential(){          
+      this.isLoading = true
+      try {
+        const dataToSend={
+          isUserProfile:true,
+          cred:this.userProfile,
+          schemaId:GAME2_PROFILE_CRED
+        }
+        const res = await this.issueCredential(dataToSend)
+        const credToEdv ={
+          keyAgreementKeyPair:this.keyAgreementKeyPair,
+          issuedCredential: res.credentialDocument
+        }
+        const storeToEdv = await this.insertCredToEdv(credToEdv);
+        if (storeToEdv.message === "document created") {
+          this.toast("Credential stored in EDV Successully", "success");
+          this.userProfile = storeToEdv
+        }       
+        const profile = res.credentialDocument.credentialSubject
+        this.userProfile.handle = profile.handle
+        this.userProfile.isDarkMode = profile.isDarkMode
+        this.userProfile.isAboveLegalAge = profile.isAboveLegalAge
+      } catch (error) {
+        this.toast(error,'error')
+      } finally {
+        this.isLoading = false        
+        this.$root.$emit("bv::hide::modal", "profile-form");
+      }
+    },
+    syncProfile(){
+      this.$root.$emit("bv::show::modal", "profile-form");
+
+    },
     goToNext() {
       this.$root.$emit("bv::hide::modal", "level-cross-popup");
       this.accpetCred = false;
@@ -294,13 +402,22 @@ export default {
     async acceptCredBtn() {      
       this.isLoading = true
       try {        
+        const cred = {
+          score:this.score,
+          level:this.level
+        }
         const vcFieldToSend = {
-        score: this.score,
-        level: this.level,
+        isUserProfile:false,
+        cred,
+        schemaId:GAME2_SCORE_CRED
       };
       const issueCredResult = await this.issueCredential(vcFieldToSend);
       if (issueCredResult !== null) {
-        const storeToEdv = await this.insertCredToEdv(this.keyAgreementKeyPair);
+        const dataToSend = {
+          keyAgreementKeyPair:this.keyAgreementKeyPair,
+          issuedCredential:issueCredResult.credentialDocument
+        }
+        const storeToEdv = await this.insertCredToEdv(dataToSend);
         if (storeToEdv.message === "document created") {
           this.toast("Score stored in EDV Successully", "success");
           this.accpetCred = this.level === 1 ? true : false;
@@ -323,15 +440,13 @@ export default {
       try {
         if(this.address===""){
           throw new Error('Connect Metamask')
-        }
-        console.log(cred.encryptedData)
+        }        
       const dataToQuery = {
           encData:cred.encryptedData,
           keyAgreementKeyPairId:this.keyAgreementKeyPair.id
         }
 
-        const res = await this.decryptVc(dataToQuery);  
-        console.log(res)
+        const res = await this.decryptVc(dataToQuery);        
         this.decryptedCredential=res.content
         this.$root.$emit("bv::show::modal", "decrypted-cred");
       } catch (error) {
@@ -359,8 +474,7 @@ export default {
       const cactusLeft = parseInt(window.getComputedStyle(this.cactus).getPropertyValue('left'));
 
       if (cactusLeft < 50 && cactusLeft > 0 && dinoTop >= 140) {
-        this.isGameOver = true;
-        console.log('collison')        
+        this.isGameOver = true;            
         this.isGameOver = true        
       }
       }      
@@ -368,14 +482,13 @@ export default {
         return 
       }
     },
-    jump() { 
-      console.log('hi')
+    jump() {      
       if (!this.isJumping) {
-        this.isJumping = true;        
-        this.increaseScore()
+        this.isJumping = true;                
         setTimeout(() => {
           this.isJumping = false;
         }, 300);
+        this.increaseScore()
       }
     },
     async verify() {
@@ -417,7 +530,7 @@ export default {
           this.isImported = false;
           this.showImportBtn = false;
           this.currentStep = 2;
-          this.level += 10;
+          this.level += 1;
           this.isStarted = false;
           this.cactus = null;
           this.dino = null;
@@ -462,25 +575,52 @@ export default {
         this.isLoading = false;
       }
     },
-    async fetchAllVcFn(id) {
+    async fetchAllVcFn() {
       try {
         if (!this.isLoggedId) {
           throw new Error("Connect Metamask");
         }
          const allDocs = await this.queryCredFromEdv({
           edvId: `hs:edv:${this.didDoc.id}`,
-          id
+          id:GAME2_SCORE_CRED
         });
         if(!allDocs.length){
-          throw new Error('No Credential Found')
-        }
-        console.log(allDocs)
+          throw new Error('No Credential Found issued by this game')
+        }        
         this.fetchEncryptedCred = allDocs
       } catch (error) {
         this.toast(error, "error");
       }
       finally {
         this.isLoading = false
+      }
+    },
+    async syncExistingCred(){
+      this.isLoading = true
+      try {
+        const playerProfile = await this.queryPlayerProfile({
+          edvId: `hs:edv:${this.didDoc.id}`,
+          id:GAME2_PROFILE_CRED
+        })              
+        if(!playerProfile.length){            
+          this.$root.$emit("bv::show::modal", "profile-form");
+          this.toast('No Profile Credential found','error')
+        }else{
+          const dataToQuery = {
+          encData:playerProfile[0].encryptedData,
+          keyAgreementKeyPairId:this.keyAgreementKeyPair.id
+        }
+        const res = await this.decryptVc(dataToQuery);           
+        const profile = res.content.credentialSubject
+        this.userProfile.handle = profile.handle
+        this.userProfile.isDarkMode = profile.isDarkMode
+        this.userProfile.isAboveLegalAge = profile.isAboveLegalAge    
+        }
+      } catch (error) {
+        this.toast(error,'error')
+      } finally {
+        this.isLoading = false
+        this.$root.$emit("bv::hide::modal", "profile-form");
       }
     },
     async connectEDV() {
@@ -512,7 +652,7 @@ export default {
         this.isLoading = false;
       }
     },
-    async importScore(id) {
+    async importScore() {
       this.isLoading = true;
       try {
         if (this.isImported) {
@@ -523,13 +663,11 @@ export default {
         }
         const queryEdv = await this.queryGame2Credential({
           edvId: `hs:edv:${this.didDoc.id}`,
-          id
-        });
-        console.log(queryEdv);
+          id:GAME1_SCORE_CRED
+        });        
         if(!queryEdv.length){
           throw new Error('No Score Cred found')
-        }
-        console.log(this.keyAgreementKeyPair.id)
+        }        
         const dataToQuery = {
           encData:queryEdv[0].encryptedData,
           keyAgreementKeyPairId:this.keyAgreementKeyPair.id
@@ -648,7 +786,9 @@ export default {
   flex-direction: column;
   align-items: center; /* Center items horizontally */
   justify-content: center; /* Center items vertically */
-  background: #42b983;
+  color: #155724;
+  background-color: #d4edda;
+  border-color: #c3e6cb;
   width: 300px;
   height: 100px;
   border-radius: 5px;
@@ -680,7 +820,7 @@ export default {
 }
 .cardp {        
   width: 350px;
-  max-height: 200px;
+  max-height: 220px;
 }
 
 @keyframes blink {

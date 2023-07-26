@@ -5,6 +5,7 @@ const issuerStore = {
   state: {
     entityAccessToken: null,
     issuedCred: null,
+    userProfileCredential:null
   },
   getters: {
     getEntityHeader: (state) => {
@@ -26,6 +27,9 @@ const issuerStore = {
     setIssuedCred(state, payload) {
       state.issuedCred = payload;
     },
+    setUserProfileCred(state,payload) {
+      state.userProfileCredential = payload
+    }
   },
   actions: {
     authenticateEntity: ({ commit }) => {
@@ -113,20 +117,18 @@ const issuerStore = {
         }
       });
     },
-    issueCredential: ({ getters, rootGetters, commit }, payload) => {
+    issueCredential: ({ getters, rootGetters, commit }, payload) => {      
       return new Promise((resolve, reject) => {
         try {
           const url = config.baseUrl + "/api/v1/credential/issue";
           const body = {
             schemaId:
-              "sch:hid:testnet:z3GnmWyHiZjKoFaU8Af44mN1h9FNMZbrDzYvTHbD3KbdJ:1.0",
+              payload.schemaId,
             subjectDid: rootGetters["holderStore/getDidDocId"],
             issuerDid:
               "did:hid:testnet:zEwEyAhzUVxcejAkc5di15uNhYKswBiLeEBzvSiX2ojBw", // issuer DID
             expirationDate: "2027-12-10T18:30:00.000Z",
-            fields: {
-              ...payload,
-            },
+            fields: payload.cred,
             namespace: "testnet",
             verificationMethodId:
               "did:hid:testnet:zEwEyAhzUVxcejAkc5di15uNhYKswBiLeEBzvSiX2ojBw#key-1", // issuer verification method
@@ -144,7 +146,11 @@ const issuerStore = {
               if (json.statusCode == 400) {
                 throw new Error("Bad Request" + json.message.toString());
               }
-              commit("setIssuedCred", json.credentialDocument);
+              if(payload.isUserProfile) {
+                commit("setUserProfileCred",json.credentialDocument)
+              } else {
+                commit("setIssuedCred", json.credentialDocument);
+              }              
               resolve(json);
             });
         } catch (error) {

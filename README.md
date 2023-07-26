@@ -27,6 +27,6 @@ Our platform harnesses the power of Hypersign SSI SDK, empowering users with a w
 ## Game Play
 
 1.  login with Metammask wallet on game 1
-2.  Play the game annd collect 100 score credential on completion of stage 1.
+2.  Play the game and collect 100 score credential on completion of level 1.
 3.  login to game 2 using the same Metamask wallet
-4.  You can either play the stage1 or click on collect credential from game1 that will help you jump stage1 to stage2 directly
+4.  You can either play the level 1 or click on Import Game-1 credential button that will help you jump level 1 to level 2 directly
