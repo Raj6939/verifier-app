@@ -23,7 +23,7 @@
     "browserify": "^17.0.0",
     "buffer": "^6.0.3",
     "core-js": "^3.8.3",
-    "hs-ssi-sdk": "github:hypersign-protocol/hid-ssi-js-sdk#develop",
+    "hs-ssi-sdk": "github:hypersign-protocol/hid-ssi-js-sdk",
     "lodash": "^4.17.21",
     "multibase": "^4.0.6",
     "node-fetch": "^3.3.1",
