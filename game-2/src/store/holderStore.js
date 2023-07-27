@@ -6,7 +6,9 @@ import {
   HIDNODE_REST,
   HIDNODE_RPC,
 } from "../utils/hsConstants";
-
+import Vue from 'vue';
+import Vuex from 'vuex';
+Vue.use(Vuex)
 // NOTE: Since Metamask signs the symmetric primitive data types like string,interger and array of symmetric premitive type,
 // we need to convert didDoc(jsonld) to json stringified
 
@@ -33,11 +35,12 @@ const holderStore = {
     edvClient: null,
     edvConfig: null,
     isLoggedIn: false,
-    encryptedVc: null,
+    encryptedVc: [],
     decryptedVc: null,
     signedVp: null,
     game2EncryptedVc:[],
-    userProfile:[]
+    userProfile:[],    
+    credentialIdArr:[]
   },
   getters: {
     getUserProfile(state){
@@ -80,6 +83,9 @@ const holderStore = {
     },
   },
   mutations: {
+    addCredToStore(state,payload) {
+      state.encryptedVc.push(payload)
+    },
     updateStore(state, payload) {
       state.address = payload;
     },
@@ -91,10 +97,11 @@ const holderStore = {
         state.didDoc = null,
         state.edvClient = null,
         state.edvConfig = null,
-        state.encryptedVc= null,
+        state.encryptedVc= [],
         state.decryptedVc= null,
         state.signedVp= null,
-        state.game2EncryptedVc=[]
+        state.game2EncryptedVc=[],
+        state.credentialIdArr=[]
       }
       state.isLoggedIn = payload;
     },
@@ -114,16 +121,20 @@ const holderStore = {
       state.decryptedVc = payload;
     },
     initVpClass(state, payload) {
-      console.log(payload);
       state.hypersignVp = payload;
     },
     setSignedVp(state, payload) {
-      console.log(payload);
       state.signedVp = payload;
     },
     setUserProfile(state,payload) {
       state.userProfile = payload
-    }
+    },
+    addCredentialsToStoreIndexSorted(state, payload) {      
+      Vue.set(state.encryptedVc, payload.index, payload.credential)
+    },
+    addTOIndexArray(state, payload) {    
+      state.credentialIdArr.push(payload)
+    },
   },
   actions: {
     initVpClass({ commit }) {
@@ -132,7 +143,6 @@ const holderStore = {
         nodeRpcEndpoint: HIDNODE_RPC,
         namespace: HIDNODE_NAMESPACE,
       });
-      console.log(vp);
       commit("initVpClass", vp);
     },
     generateDIDDoc: ({ commit }, payload) => {
@@ -148,7 +158,6 @@ const holderStore = {
             address: payload,
           };
           hypersignDid.createByClientSpec(params).then((resp) => {
-            console.log(resp);
             commit("setDIDDoc", resp);
             resolve(resp);
           });
@@ -171,7 +180,6 @@ const holderStore = {
             keyAgreement: payload.keyAgreement,
           };
           edvClient.registerEdv(config).then((data) => {
-            console.log(data);
             state.edvConfig = data;
             commit("setLogginStatus", true);
             commit("setEdvClient", edvClient);
@@ -241,7 +249,7 @@ const holderStore = {
         }
       });
     },
-    queryCredFromEdv: ({ state, commit },payload) => {
+    queryCredFromEdv: ({ state },payload) => {
       return new Promise((resolve, reject) => {
         try {
           state.edvClient
@@ -254,9 +262,7 @@ const holderStore = {
                 },
               ],
             })
-            .then((data) => {
-              console.log(data);
-              commit("setEncryptedVc", data);
+            .then((data) => {                            
               resolve(data);
             });
         } catch (error) {
@@ -276,7 +282,6 @@ const holderStore = {
               },
             })
             .then((data) => {
-              console.log(data);
               commit("setDecryptedVc", data.content);
               resolve(data);
             });
@@ -284,6 +289,11 @@ const holderStore = {
           reject(error);
         }
       });
+    },
+    addCredToDecryptedArray: ({commit},payload) => {      
+      commit('addTOIndexArray',payload.credential.credential.id)
+      commit('addCredentialsToStoreIndexSorted', payload)
+
     },
     insertCredToEdv: ({ state }, payload) => {  
       return new Promise((resolve, reject) => {
@@ -330,9 +340,6 @@ const holderStore = {
               holderDid: getters.getDidDocId,
             })
             .then((data) => {
-              console.log(data);
-              console.log(getters.getDidDocId);
-              console.log(getters.getVerificationMethodId);
               state.hypersignVp
                 .signByClientSpec({
                   presentation: data,
@@ -343,12 +350,10 @@ const holderStore = {
                   domain: "www.hypersign.id",
                 })
                 .then((res) => {
-                  console.log(res);
                   commit("setSignedVp", res);
                   resolve(res);
                 })
                 .catch((error) => {
-                  console.log(error);
                   reject(error);
                 });
             });

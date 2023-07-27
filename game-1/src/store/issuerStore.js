@@ -149,7 +149,8 @@ const issuerStore = {
               if(payload.isUserProfile){
                 commit("setUserProfileCred",json.credentialDocument)
               }else{
-                commit("setIssuedCred", json.credentialDocument);
+                const credential = { encrypted: false, credential: json.credentialDocument }
+                commit("setIssuedCred", credential);
               }              
               resolve(json);
             });

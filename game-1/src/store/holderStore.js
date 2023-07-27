@@ -6,7 +6,9 @@ import {
   HIDNODE_REST,
   HIDNODE_RPC,
 } from "../utils/hsConstants";
-
+import Vue from 'vue';
+import Vuex from 'vuex';
+Vue.use(Vuex)
 // NOTE: Since Metamask signs the symmetric primitive data types like string,interger and array of symmetric premitive type,
 // we need to convert didDoc(jsonld) to json stringified
 
@@ -32,11 +34,12 @@ const holderStore = {
     edvClient: null,
     edvConfig: null,
     isLoggedIn: false,
-    encryptedVc: null,
+    encryptedVc: [],
     decryptedVc: null,
     signedVp: null,
     game2EncryptedVc:[],
-    userProfile:[]
+    userProfile:[],
+    credentialIdArr:[]
   },
   getters: {
     getUserProfile(state){
@@ -78,7 +81,10 @@ const holderStore = {
       });
     },
   },
-  mutations: {
+  mutations: {    
+    addCredToStore(state,payload) {
+      state.encryptedVc.push(payload)
+    },
     updateStore(state, payload) {
       state.address = payload;
     },
@@ -90,10 +96,11 @@ const holderStore = {
         state.didDoc = null,
         state.edvClient = null,
         state.edvConfig = null,
-        state.encryptedVc= null,
+        state.encryptedVc= [],
         state.decryptedVc= null,
         state.signedVp= null,
-        state.game2EncryptedVc=[]
+        state.game2EncryptedVc=[],
+        state.credentialIdArr=[]
       }
       state.isLoggedIn = payload;
     },
@@ -120,7 +127,13 @@ const holderStore = {
     },
     setUserProfile(state,payload) {
       state.userProfile = payload
-    }
+    },
+    addCredentialsToStoreIndexSorted(state, payload) {      
+      Vue.set(state.encryptedVc, payload.index, payload.credential)
+    },
+    addTOIndexArray(state, payload) {    
+      state.credentialIdArr.push(payload)
+    },
   },
   actions: {
     initVpClass({ commit }) {
@@ -172,7 +185,7 @@ const holderStore = {
             commit("setEdvConfig", data);
             resolve(data);
           });
-        } catch (error) {
+        } catch (error) {          
           reject(error);
         }
       });
@@ -221,7 +234,7 @@ const holderStore = {
         }
       });
     },
-    queryCredFromEdv: ({ state, commit },payload) => {
+    queryCredFromEdv: ({ state },payload) => {
       return new Promise((resolve, reject) => {
         try {
           state.edvClient
@@ -234,8 +247,7 @@ const holderStore = {
                 },
               ],
             })
-            .then((data) => {
-              commit("setEncryptedVc", data);
+            .then((data) => {              
               resolve(data);
             });
         } catch (error) {
@@ -262,6 +274,11 @@ const holderStore = {
           reject(error);
         }
       });
+    },
+    addCredToDecryptedArray: ({commit},payload) => {      
+      commit('addTOIndexArray',payload.credential.credential.id)
+      commit('addCredentialsToStoreIndexSorted', payload)
+
     },
     insertCredToEdv: ({ state }, payload) => {            
       return new Promise((resolve, reject) => {
