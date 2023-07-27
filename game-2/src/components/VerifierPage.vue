@@ -39,7 +39,7 @@
                 <div class="cactus" :class="{ 'cactus-animated': isStarted }" ref="cactusRef"></div>
               </div>
             </div>
-            <div class="mt-4 or-div"> 
+            <div class="mt-4 ml-5"> 
               <b-button class="text-right mr-4 hs-button" @click="start">{{
                 isStarted ? "Reset" : "Start Playing"
               }}</b-button>                           
@@ -50,7 +50,7 @@
       </b-card>
       <b-card class="ml-4" v-if="isLoggedId" style="max-height:45rem;">
       <b-card class="text-center cardp" v-if="isLoggedId">
-        <div class="d-flex">
+        <div class="d-flex ml-2">
         <h4><strong>Profile</strong></h4>
         <div class="text-right">
           <i class="fa fa-cog mr-3 pr-icon"
@@ -58,7 +58,7 @@
           title="Profile Settings"          
            @click="syncProfile"
           ></i>        
-          <i class="fa fa-power-off pr-icon"
+          <i class="fa fa-power-off pr-icon mr-1"
           v-b-tooltip.hover.right
           title="Disconnect"   
           @click="disconnect"
@@ -98,11 +98,11 @@
             <li style="display: flex; align-items: center">
               <strong style="margin-right: 10px">DID:</strong>
               <div class="d-flex align-items-center">
-                <a style="margin-right: 10px" :href="`https://explorer.hypersign.id/hypersign-testnet/identity/${didDoc.id}`" target="_blank">{{
+                <a :href="`https://explorer.hypersign.id/hypersign-testnet/identity/${didDoc.id}`" target="_blank">{{
                   truncate1(didDoc.id, 30)
                 }}</a>
                 <i
-                  class="fas fa-copy copy-icon"
+                  class="fas fa-copy copy-icon ml-1 mb-2"
                   @click="copyToClipboard(didDoc.id, 'DID')"
                 ></i>
               </div>
@@ -110,11 +110,11 @@
             <li style="display: flex; align-items: center">
               <strong style="margin-right: 10px">EDV ID:</strong>
               <div class="d-flex align-items-center">
-                <span style="margin-right: 10px">{{
+                <span>{{
                   truncate1(`hs:edv:${didDoc.id}`, 30)
                 }}</span>
                 <i
-                  class="fas fa-copy copy-icon"
+                  class="fas fa-copy copy-icon ml-1 mb-2"
                   @click="copyToClipboard(`hs:edv:${didDoc.id}`, 'EDV Id')"
                 ></i>
               </div>
