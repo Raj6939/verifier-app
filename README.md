@@ -24,6 +24,7 @@ Our platform harnesses the power of Hypersign SSI SDK, empowering users with a w
   npm install
   npm run serve
 ```
+  Note: Use Node version 16 or above version
 ## Game Play
 
 1.  login with Metammask wallet on game 1
