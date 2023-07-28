@@ -261,7 +261,7 @@
             show
             class="custom-alert text-left"
           >            
-            Requesting For Public Key
+            Requesting Your Public Key
             <img v-if="instructionsCheck.isSelectedWallet && !instructionsCheck.isAllowedPubKey" style="float:right;" src="../assets/small-loader.gif" height="20px" width="20px" alt="" srcset="">
             <i class="fa fa-check" style="float:right;"
             v-if="instructionsCheck.isAllowedPubKey && instructionsCheck.isSelectedWallet"
@@ -294,7 +294,7 @@
             show
             class="custom-alert text-left"
           >            
-            Requesting To Connect To Your Vault
+            Requesting To Connect Your Vault
             <img v-if="!instructionsCheck.isAllowedIndexing && instructionsCheck.isDIDReg" style="float:right;" src="../assets/small-loader.gif" height="20px" width="20px" alt="" srcset="">
             <i class="fa fa-check" style="float:right;"
             v-if="instructionsCheck.isconnectedToEdv"
@@ -317,7 +317,7 @@
         <h2><strong>Set Up Your Profile</strong></h2>     
         <div class="centered-profile mt-2 mb-4">          
           <div class="d-flex">
-          <label class="mt-2" >Your Game Handle: </label>          
+          <label class="mt-2">Your Game Handle: </label>          
           <input type="text" class="form-control w-50"
           placeholder="@handle"
           v-model="userProfile.handle"
@@ -336,7 +336,7 @@
           <div class="row w-50 mr-2">
             <div class="col-lg-9 col-md-9 text-left">
               <label for="endDate"
-                  class="col-form-label">Toggle for dark theme: <br>( default(light) )  </label>
+                  class="col-form-label">Toggle for dark theme (default light):</label>
             </div>
             <div class="col-lg-3 col-md-3 mt-2 text-right">
                 <b-form-checkbox v-model="userProfile.isDarkMode" @change="onToggleChange" name="check-button" switch>
@@ -822,7 +822,7 @@ export default {
           id:GAME2_SCORE_CRED
         });
         if(!queryEdv.length){
-          throw new Error('No Score Credential found')
+          throw new Error('No Game 2 Credential found')
         }
         const dataToQuery = {
           encData:queryEdv[0].encryptedData,

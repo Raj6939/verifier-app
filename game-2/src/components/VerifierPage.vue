@@ -50,7 +50,7 @@
                   Stop
                 </span>
               </b-button>                          
-                 <b-button variant="link" class="ml-4 mt-2" @click="importScore()" v-if="showImportBtn" style="cursor:pointer">Import Game-1 Credential To Skip Level 1</b-button>
+                 <b-button variant="link" class="ml-4 mt-2" @click="importScore()" v-if="showImportBtn" style="cursor:pointer">Import Game 1 Credential To Skip Level 1</b-button>
             </div>
           </div>
         </div>
@@ -275,7 +275,7 @@
             show
             class="custom-alert text-left"
           >            
-            Requesting To Connect To Your Vault
+            Requesting To Connect Your Vault
             <img v-if="!instructionsCheck.isAllowedIndexing && instructionsCheck.isDIDReg" style="float:right;" src="../assets/small-loader.gif" height="20px" width="20px" alt="" srcset="">
             <i class="fa fa-check" style="float:right;"
             v-if="instructionsCheck.isconnectedToEdv"
@@ -317,7 +317,7 @@
           <div class="row w-50 mr-2">
             <div class="col-lg-9 col-md-9 text-left">
               <label for="endDate"
-                  class="col-form-label">Toggle for dark theme: <br>( default(light) )  </label>
+                  class="col-form-label">Toggle for dark theme (default light): </label>
             </div>
             <div class="col-lg-3 col-md-3 mt-2 text-right">
                 <b-form-checkbox v-model="userProfile.isDarkMode" @change="onToggleChange" name="check-button" switch>
@@ -855,7 +855,7 @@ export default {
           id:GAME1_SCORE_CRED
         });        
         if(!queryEdv.length){
-          throw new Error('No Score Credential found')
+          throw new Error('No Game 1 Credential found')
         }        
         const dataToQuery = {
           encData:queryEdv[0].encryptedData,
