@@ -34,17 +34,18 @@
                 :line-thickness="linethickness"
                 :passive-thickness="passivethickness"
               ></step-progress>
-              <div class="rowBox mt-4 ml-4" @mousemove="increaseScore">
+              </div>
+              <div class="rowBox mt-4" @mousemove="increaseScore">
                 <div class="box">
                   <span class="p-2">
                     Move your cursor inside this box to play!
                   </span>
-                </div>
-              </div>
+                </div>              
             </div>            
             
-            <div class="mt-4 or-div"> 
-              <b-button class="text-right mr-4 hs-button" @click="start">
+            <div class="mt-4"> 
+              <b-button class="ml-4 hs-button" @click="start"
+              >
                 <span v-if="!isStarted">
                   <i class="fa fa-play"></i>
                   Start Playing
@@ -603,11 +604,11 @@ export default {
         isconnectedToEdv:false,
         isDIDReg:false
       },
-      this.userProfile={
-        handle:'',
-        isAboveLegalAge:'',
-        isDarkMode:''
-      },
+      // this.userProfile={
+      //   handle:'',
+      //   isAboveLegalAge:'',
+      //   isDarkMode:''
+      // },
        this.scoreFlags = {
         showNextLevelBtn:false,
         showAcceptCredentialText:false, 
@@ -951,6 +952,7 @@ export default {
   margin-left: 7rem;
 }
 .rowBox {
+  margin-left: 3.5rem;
   cursor: pointer;
   height: 300px;
   border: 1px solid black;
@@ -959,10 +961,11 @@ export default {
   justify-content: center;
   font-size: 24px;
   font-weight: bold;
-  width: 90%;
+  width: 100%;  
 }
 .game-con {
-  margin-left: 1.7rem;
+  padding-left: 4rem;
+  margin-left: 2rem;  
 }
 .acc-cont b-button {
   width: 100px; /* Adjust the width as per your requirement */

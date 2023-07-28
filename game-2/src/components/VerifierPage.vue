@@ -654,11 +654,11 @@ export default {
         isconnectedToEdv:false,
         isDIDReg:false
       },
-      this.userProfile={
-        handle:'',
-        isAboveLegalAge:'',
-        isDarkMode:''
-      }
+      // this.userProfile={
+      //   handle:'',
+      //   isAboveLegalAge:'',
+      //   isDarkMode:''
+      // }
       this.scoreFlags = {
         showNextLevelBtn:false,
         showAcceptCredentialText:false, 
