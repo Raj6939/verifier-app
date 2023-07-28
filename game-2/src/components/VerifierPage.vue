@@ -5,12 +5,12 @@
       :can-cancel="true"
       :is-full-page="fullPage"
     ></loading>    
-    <h1 :class="userProfile.isDarkMode?'changeColor':''"> Game-2</h1>
+    <h1 :class="userProfile.isDarkMode?'changeColor':''"> Game 2</h1>
     <div class="container d-flex">
       <b-card class="custom-card" :style="isLoggedId ?'height:45rem;':''">
         <div class="text-center" v-if="!isLoggedId">
           <b-button class="hs-button" @click="connectMetamask" size="lg"
-            >Connect Metamask
+            >Connect Wallet
           </b-button>
         </div>
         <div class="d-flex" v-if="isLoggedId">
@@ -40,10 +40,17 @@
               </div>
             </div>
             <div class="mt-4 ml-5"> 
-              <b-button class="text-right mr-4 hs-button" @click="start">{{
-                isStarted ? "Reset" : "Start Playing"
-              }}</b-button>                           
-                 <b-button variant="link" class="ml-4 mt-2" @click="importScore()" v-if="showImportBtn" style="cursor:pointer">Import Game-1 Credential</b-button>
+              <b-button class="text-right mr-4 hs-button" @click="start">
+                <span v-if="!isStarted">
+                  <i class="fa fa-play"></i>
+                  Start Playing
+                </span>
+                <span v-else>
+                  <i class="fa fa-stop"></i>
+                  Stop
+                </span>
+              </b-button>                          
+                 <b-button variant="link" class="ml-4 mt-2" @click="importScore()" v-if="showImportBtn" style="cursor:pointer">Import Game-1 Credential To Skip Level 1</b-button>
             </div>
           </div>
         </div>
@@ -80,15 +87,15 @@
               </div>
             </li>
             <li style="display: flex; align-items: center">
-              <strong style="margin-right: 10px">Age verification Done:</strong>
-              <div class="d-flex align-items-center">
+              <strong style="margin-right: 10px">Age Verified?:</strong>
+              <div class="d-flex text-right">
                 <a style="margin-right: 10px">{{
                   userProfile.isAboveLegalAge ? 'Yes' :'Not Yet'
                 }}</a>
               </div>
             </li>
             <li style="display: flex; align-items: center">
-              <strong style="margin-right: 10px">theme:</strong>
+              <strong style="margin-right: 10px">Theme:</strong>
               <div class="d-flex align-items-center">
                 <a style="margin-right: 10px">{{
                   userProfile.isDarkMode ? 'dark' :'light'
@@ -108,14 +115,14 @@
               </div>
             </li>
             <li style="display: flex; align-items: center">
-              <strong style="margin-right: 10px">EDV ID:</strong>
+              <strong style="margin-right: 10px">Vault ID:</strong>
               <div class="d-flex align-items-center">
                 <span>{{
                   truncate1(`hs:edv:${didDoc.id}`, 30)
                 }}</span>
                 <i
                   class="fas fa-copy copy-icon ml-1 mb-2"
-                  @click="copyToClipboard(`hs:edv:${didDoc.id}`, 'EDV Id')"
+                  @click="copyToClipboard(`hs:edv:${didDoc.id}`, 'Vault Id')"
                 ></i>
               </div>
             </li>       
@@ -224,9 +231,10 @@
             show
             class="custom-alert text-left"
           >            
-            Request Your Wallet Address                        
+            Requesting Your Wallet Address
+            <img v-if="!instructionsCheck.isSelectedWallet" style="float:right;" src="../assets/small-loader.gif" height="20px" width="20px" alt="" srcset="">
             <i class="fa fa-check mt-1" style="float:right;"            
-            v-if="instructionsCheck.isSelectedWallet"
+            v-else
             ></i>            
           </b-alert>
          <b-alert            
@@ -234,20 +242,21 @@
             show
             class="custom-alert text-left"
           >            
-            Request for Public key
+            Requesting Your Public key
+            <img v-if="instructionsCheck.isSelectedWallet && !instructionsCheck.isAllowedPubKey" style="float:right;" src="../assets/small-loader.gif" height="20px" width="20px" alt="" srcset="">
             <i class="fa fa-check" style="float:right;"
-            v-if="instructionsCheck.isAllowedPubKey"
+            v-if="instructionsCheck.isAllowedPubKey && instructionsCheck.isSelectedWallet"
             ></i>            
           </b-alert>
           <b-alert        
-            v-if="!isDIDResolved"    
-            :variant="instructionsCheck.isDIDReg ? 'success':'secondary'"
+            :variant="instructionsCheck.isDIDReg ? 'success':'secondary'"            
             show
             class="custom-alert text-left"
           >            
-            Request for Sign the DID to Register on blockchain
+            Checking your DID On Chain
+            <img v-if="instructionsCheck.isAllowedPubKey && !instructionsCheck.isDIDReg" style="float:right;" src="../assets/small-loader.gif" height="20px" width="20px" alt="" srcset="">
             <i class="fa fa-check" style="float:right;"
-            v-if="instructionsCheck.isDIDReg"
+            v-if="instructionsCheck.isDIDReg && instructionsCheck.isAllowedPubKey"
             ></i>            
           </b-alert>
           <b-alert            
@@ -256,8 +265,9 @@
             class="custom-alert text-left"
           >            
             Allow Metamask for indexing your Vault
+            <img v-if="!instructionsCheck.isAllowedIndexing && instructionsCheck.isDIDReg" style="float:right;" src="../assets/small-loader.gif" height="20px" width="20px" alt="" srcset="">
             <i class="fa fa-check" style="float:right;"
-            v-if="instructionsCheck.isAllowedIndexing"
+            v-if="instructionsCheck.isAllowedIndexing && instructionsCheck.isDIDReg"
             ></i>            
           </b-alert>
           <b-alert            
@@ -265,7 +275,8 @@
             show
             class="custom-alert text-left"
           >            
-            Request To connect To EDV
+            Requesting To Connect To Your Vault
+            <img v-if="!instructionsCheck.isAllowedIndexing && instructionsCheck.isDIDReg" style="float:right;" src="../assets/small-loader.gif" height="20px" width="20px" alt="" srcset="">
             <i class="fa fa-check" style="float:right;"
             v-if="instructionsCheck.isconnectedToEdv"
             ></i>            
@@ -284,7 +295,7 @@
     </hf-pop-up>
     <hf-pop-up Id="profile-form" Size="lg" :keepHeader="true">
       <div class="text-center" style="align-items: center">
-        <h2><strong>Set up your Profile</strong></h2>        
+        <h2><strong>Set Up Your Profile</strong></h2>        
         <div class="centered-profile mt-2 mb-4">          
           <div class="d-flex">
           <label class="mt-2" >Your Game Handle: </label>          
@@ -306,7 +317,7 @@
           <div class="row w-50 mr-2">
             <div class="col-lg-9 col-md-9 text-left">
               <label for="endDate"
-                  class="col-form-label">Toggle for dark theme: <br>( light/dark )  </label>
+                  class="col-form-label">Toggle for dark theme: <br>( default(light) )  </label>
             </div>
             <div class="col-lg-3 col-md-3 mt-2 text-right">
                 <b-form-checkbox v-model="userProfile.isDarkMode" @change="onToggleChange" name="check-button" switch>
@@ -318,7 +329,7 @@
             <b-button class="mt-2 mb-2 hs-button" @click="issueProfileCredential"
               >Save</b-button
             >                
-            <b-button variant="link" class="ml-4" @click="syncExistingCred" style="cursor:pointer">Import Existing Setting</b-button>    
+            <b-button variant="link" class="ml-4" @click="syncExistingCred" style="cursor:pointer">Import Existing Setting From Vault</b-button>    
           </div>
         </div>        
       </div>
@@ -492,7 +503,7 @@ export default {
         }
         const storeToEdv = await this.insertCredToEdv(credToEdv);
         if (storeToEdv.message === "document created") {
-          this.toast("Credential stored in EDV Successully", "success");
+          this.toast("Credential Stored In Vault Successully", "success");
           this.userProfile = storeToEdv
         }       
         const profile = res.credentialDocument.credentialSubject
@@ -535,7 +546,7 @@ export default {
         }
         const storeToEdv = await this.insertCredToEdv(dataToSend);
         if (storeToEdv.message === "document created") {
-          this.toast("Score stored in EDV Successully", "success");
+          this.toast("Score stored in Vault Successully", "success");
           this.accpetCred = this.level === 1 ? true : false;
           this.scoreFlags.isCredentialAccepted = true
           this.scoreFlags.showAcceptCredBtn = false
@@ -728,6 +739,9 @@ export default {
           const regDID = await this.registerDID(payload);
           console.log(regDID);
           this.instructionsCheck.isDIDReg=true        
+        }
+        else{
+          this.instructionsCheck.isDIDReg = true
         }
         await this.connectEDV();
       } catch (error) {
