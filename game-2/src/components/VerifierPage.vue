@@ -526,7 +526,8 @@ export default {
       this.scoreFlags.showNextLevelBtn = false
       this.scoreFlags.showAcceptCredentialText = false
     },
-    async acceptCredBtn() {      
+    async acceptCredBtn() {   
+      this.scoreFlags.showNextLevelBtn = false   
       this.isLoading = true
       try {        
         const cred = {
