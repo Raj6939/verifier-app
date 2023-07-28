@@ -554,7 +554,10 @@ export default {
           this.accpetCred = this.level === 1 ? true : false;
           this.scoreFlags.isCredentialAccepted = true
           this.scoreFlags.showAcceptCredBtn = false
-          this.scoreFlags.showNextLevelBtn = this.level === 1 ? true :false
+          this.scoreFlags.showNextLevelBtn = this.level === 1 ? true :false          
+          if(this.scoreFlags.isCredentialAccepted){
+            this.showImportBtn = false
+          }
         }
       }
       } catch (error) {
@@ -571,6 +574,11 @@ export default {
       this.level = 0;
       this.reset();
       this.onToggleChange()
+      this.userProfile={
+        handle:'',
+        isAboveLegalAge:false,
+        isDarkMode:false
+      }
     },
     start() {
       if (this.isStarted) {
