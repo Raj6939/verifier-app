@@ -26,8 +26,10 @@ Our platform harnesses the power of Hypersign SSI SDK, empowering users with a w
 ```
   Note: Use Node version 16 or above version
 ## Game Play
-
+Both Games are live here
+[Game 1](https://reputation-odyssey-game-1.netlify.app/)
+[Game 2](https://reputation-odyssey-game-2.netlify.app/)
 1.  login with Metammask wallet on game 1
 2.  Play the game and collect 100 score credential on completion of level 1.
 3.  login to game 2 using the same Metamask wallet
-4.  You can either play the level 1 or click on Import Game-1 credential button that will help you jump level 1 to level 2 directly
+4.  You can either play level 1 or click on Import Game-1 credential button that will help you jump from level 1 to level 2 directly
