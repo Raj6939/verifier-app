@@ -3,6 +3,10 @@
 # Reputation-Odyssey
 The Ultimate Game Reputation Backpack for Players. This innovative tool allows players to import and utilize their game reputation in any supported game seamlessly. Reputation-Odyssey showcases the power of Self-Sovereign Identity (SSI) with Hypersign SSI SDK, providing a secure and decentralized solution.
 
+Both Games are live here
+[Game 1](https://reputation-odyssey-game-1.netlify.app/)
+[Game 2](https://reputation-odyssey-game-2.netlify.app/)
+
 
 ## Tech Used
 Our platform harnesses the power of Hypersign SSI SDK, empowering users with a wide range of Self-Sovereign Identity (SSI) capabilities. Each Gamer Profile is uniquely assigned a Decentralized Identifier (DID), which is seamlessly registered on the blockchain. Moreover, the platform facilitates the issuance of score credentials and enhances security by utilizing the Encrypted Data Vault (EDV) SDK to securely store Verifiable Credentials (VC) within the user's personal Vault (EDV).
@@ -29,9 +33,7 @@ Our platform harnesses the power of Hypersign SSI SDK, empowering users with a w
   Note: Use Node version 16 or above version
 
 ## Game Play
-Both Games are live here
-[Game 1](https://reputation-odyssey-game-1.netlify.app/)
-[Game 2](https://reputation-odyssey-game-2.netlify.app/)
+
 1.  login with Metammask wallet on game 1
 2.  Play the game and collect 100 score credential on completion of level 1.
 3.  login to game 2 using the same Metamask wallet
